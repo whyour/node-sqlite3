@@ -1,9 +1,6 @@
 name: Build ARM bindings
 
-on:
-  push:
-    tags:
-      - "v*"
+on: [push]
 
 jobs:
   build:
@@ -12,9 +9,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        nodeVersion: [13, 14]
-        platform: ["linux", "alpine"]
-        arch: [linux/arm/v7, linux/arm64]
+        nodeVersion: [14]
+        platform: ["alpine"]
+        arch: [linux/arm/v7, linux/arm64, linux/amd64]
         include:
           - platform: "linux"
             variant: "stretch"
