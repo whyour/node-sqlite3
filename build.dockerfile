@@ -16,9 +16,7 @@ RUN npm run test
 RUN npx node-pre-gyp package
 
 FROM node:14-buster-slim AS release
-WORKDIR /app
-
-
+WORKDIR /app/build
 # Copy app files from build layer
 COPY --from=build /app/build /app/build
 
