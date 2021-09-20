@@ -18,3 +18,16 @@ setup.sh
 cloudformation/ci.template.js
 appveyor.yml
 .vscode
+build-tmp-napi-v3
+.idea
+out
+.github
+tools
+.dockerignore
+BinaryBuilder.Dockerfile
+build.dockerfile
+CHANGELOG.md
+CONTRIBUTING.md
+Dockerfile
+LICENSE
+README.md
