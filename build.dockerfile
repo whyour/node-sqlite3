@@ -1,5 +1,5 @@
 # DON'T UPDATE TO node:14-bullseye-slim, see #372.
-FROM node:14-buster-slim AS build
+FROM node:14-stretch-slim AS build
 WORKDIR /app
 
 COPY . .
@@ -15,7 +15,7 @@ RUN npx node-pre-gyp install --build-from-source
 RUN npm run test
 RUN npx node-pre-gyp package
 
-FROM node:14-buster-slim AS release
+FROM node:14-stretch-slim AS release
 WORKDIR /app/build
 # Copy app files from build layer
 COPY --from=build /app/build /app/build
