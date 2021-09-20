@@ -1,7 +1,7 @@
 {
   "name": "@louislam/sqlite3",
   "description": "Asynchronous, non-blocking SQLite3 bindings",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "homepage": "https://github.com/mapbox/node-sqlite3",
   "author": {
     "name": "MapBox",
@@ -10,8 +10,8 @@
   "binary": {
     "module_name": "node_sqlite3",
     "module_path": "./lib/binding/napi-v{napi_build_version}-{platform}-{arch}",
-    "host": "https://mapbox-node-binary.s3.amazonaws.com",
-    "remote_path": "./sqlite3/v5.0.2/{toolset}/",
+    "host": "https://prebuilt.louislam.net",
+    "remote_path": "./cache/sqlite3/v{version}/{toolset}/",
     "package_name": "napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
     "napi_versions": [
       3
@@ -64,7 +64,8 @@
     "install": "node-pre-gyp install --fallback-to-build",
     "pretest": "node test/support/createdb.js",
     "test": "mocha -R spec --timeout 480000",
-    "pack": "node-pre-gyp package"
+    "pack": "node-pre-gyp package",
+    "build-linux": "docker buildx build -f build.dockerfile --platform linux/amd64,linux/arm64,linux/arm/v7 --output type=local,dest=out ."
   },
   "license": "BSD-3-Clause",
   "keywords": [

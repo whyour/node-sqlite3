@@ -8,9 +8,7 @@ jobs:
     strategy:
       matrix:
         node-version:
-        # - 12.x
         - 14.x
-        # - 16.x
         os:
         - macos-latest
         - ubuntu-latest
@@ -21,8 +19,19 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
+
+    - name: npm-install
+      run: npm install --ignore-scripts
+
     - name: build
-      run: npm install --build-from-source
+      run: npx node-pre-gyp install --build-from-source
+
+    - name: test
+      run: npm run test
+
+    - name: pack
+      run: npx node-pre-gyp package
+
     - uses: actions/upload-artifact@v2
       with:
         name: lib
