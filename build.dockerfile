@@ -10,6 +10,7 @@ RUN apt update && \
     apt --yes install python3 python3-pip python3-dev git g++ make && \
     ln -s /usr/bin/python3 /usr/bin/python
 
+RUN npm install @mapbox/node-pre-gyp -g
 RUN npm install --ignore-scripts
 RUN npx node-pre-gyp install --build-from-source
 RUN npm run test

@@ -65,7 +65,7 @@
     "pretest": "node test/support/createdb.js",
     "test": "mocha -R spec --timeout 480000",
     "pack": "node-pre-gyp package",
-    "build-linux": "docker buildx build -f build.dockerfile --platform linux/amd64,linux/arm64,linux/arm/v7 --output type=tar,dest=out.tar ."
+    "build-linux": "docker buildx build -f build.dockerfile --platform linux/amd64,linux/arm64,linux/arm/v7 --output type=tar,dest=D:/DockerCache/out.tar ."
   },
   "license": "BSD-3-Clause",
   "keywords": [
