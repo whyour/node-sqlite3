@@ -6,6 +6,8 @@ Mainly used for my another project - Uptime Kuma
 - ARM pre-built
 - Fix npm security problem
 
+PS: No electron supports
+
 ## How to use
 
 ```
