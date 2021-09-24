@@ -1,4 +1,12 @@
-Just a temp security fix for node-sqlite3. Go back to mapbox/node-sqlite3 when they released next version.
+# Fork of node-sqlite3
+
+Mainly used for my another project - Uptime Kuma
+
+- SQLite update to 3.36.0
+- ARM pre-built
+- Fix npm security problem
+
+## How to use
 
 ```
 npm install @louislam/sqlite3
