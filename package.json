@@ -14,7 +14,7 @@
     "remote_path": "./cache/sqlite3/v{version}/{toolset}/",
     "package_name": "napi-v{napi_build_version}-{platform}-{arch}-{libc}.tar.gz",
     "napi_versions": [
-      3
+      6
     ]
   },
   "contributors": [
