@@ -16,3 +16,19 @@ npm remove sqlite3
 ```
 
 Replace require("@louislam/sqlite") in your source code
+
+
+
+
+## Prepare Prebuilt
+
+glibc
+- armv7 - Not available
+- arm64 - npm run build-linux-arm
+- amd64 - npm run build-linux
+
+musl (alpine)
+- armv7/arm64/amd64 - npm run build-linux-alpine
+
+Windows / MacOS
+- Get from Github Action
