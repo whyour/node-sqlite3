@@ -23,9 +23,8 @@ Replace require("@louislam/sqlite") in your source code
 ## Prepare Prebuilt
 
 glibc
-- armv7 - Not available
-- arm64 - npm run build-linux-arm
-- amd64 - npm run build-linux
+- armv7 - npm run build-linux-arm (Support glibc >=2.18 only)
+- amd64/arm64 - npm run build-linux
 
 musl (alpine)
 - armv7/arm64/amd64 - npm run build-linux-alpine
