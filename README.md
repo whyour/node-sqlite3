@@ -5,6 +5,7 @@ Mainly used for my another project - Uptime Kuma
 - SQLite update to 3.36.0
 - ARM pre-built
 - Fix npm security problem
+- Fix worker_threads problem
 
 PS: No electron supports
 
