@@ -1,8 +1,8 @@
-# Fork of node-sqlite3
+# Fork of node-sqlite3 with many pre-built supports
 
-Mainly used for my another project - Uptime Kuma
+Mainly used for my another project - [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 
-Although the main node-sqlite3 got updated, but there is still no arm pre-built.
+Although the main node-sqlite3 got updated, but there is still no arm pre-built. So this fork is still needed.
 
 - Support armv7 / arm64 pre-built
 - Support Alpine (musl) pre-built
