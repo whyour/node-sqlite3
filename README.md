@@ -2,9 +2,10 @@
 
 Mainly used for my another project - Uptime Kuma
 
-- SQLite update to 3.36.0
-- ARM pre-built
-- Fix npm security problem
+Although the main node-sqlite3 got updated, but there is still no arm pre-built.
+
+- Support armv7 / arm64 pre-built
+- Support Alpine (musl) pre-built
 
 PS: No electron supports
 
@@ -16,9 +17,6 @@ npm remove sqlite3
 ```
 
 Replace require("@louislam/sqlite") in your source code
-
-
-
 
 ## Prepare Prebuilt
 
