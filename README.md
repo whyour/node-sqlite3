@@ -6,6 +6,7 @@ Although the main node-sqlite3 got updated, but there is still no arm pre-built.
 
 - Support armv7 / arm64 pre-built
 - Support Alpine (musl) pre-built
+- Fix worker_threads problem
 
 PS: No electron supports
 
