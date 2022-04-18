@@ -50,7 +50,7 @@
     "node-pre-gyp-github": "1.4.4"
   },
   "peerDependencies": {
-    "node-gyp": "8.x"
+    "node-gyp": "7.x"
   },
   "peerDependenciesMeta": {
     "node-gyp": {
@@ -58,16 +58,18 @@
     }
   },
   "optionalDependencies": {
-    "node-gyp": "8.x"
+    "node-gyp": "^7.1.2"
   },
   "scripts": {
     "install": "node-pre-gyp install --fallback-to-build",
     "pretest": "node test/support/createdb.js",
     "test": "mocha -R spec --timeout 480000",
     "pack": "node-pre-gyp package",
-    "build-linux": "docker buildx build -f build.dockerfile --platform linux/amd64,linux/arm64 --output type=tar,dest=D:/DockerCache/out.tar . --progress plain",
-    "build-linux-arm": "docker buildx build -f build-arm.dockerfile --platform linux/arm/v7 --output type=tar,dest=D:/DockerCache/out-armv7.tar . --progress plain",
-    "build-linux-alpine": "docker buildx build -f build-alpine.dockerfile --platform linux/amd64,linux/arm64,linux/arm/v7 --output type=tar,dest=D:/DockerCache/out-alpine.tar ."
+    "build-linux": "docker buildx build -f build.dockerfile --platform linux/amd64,linux/arm64 --output type=tar,dest=C:/DockerCache/out.tar . --progress plain",
+    "build-linux-arm": "docker buildx build -f build-arm.dockerfile --platform linux/arm/v7 --output type=tar,dest=C:/DockerCache/out-armv7.tar . --progress plain",
+    "build-linux-alpine": "docker buildx build -f build-alpine.dockerfile --platform linux/amd64,linux/arm64,linux/arm/v7 --output type=tar,dest=C:/DockerCache/out-alpine.tar .",
+    "npm-publish-dry-run": "npm publish --dry-run",
+    "npm-publish": "npm publish"
   },
   "license": "BSD-3-Clause",
   "keywords": [
