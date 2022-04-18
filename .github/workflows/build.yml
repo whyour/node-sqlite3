@@ -19,17 +19,26 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    - name: update npm
+      run: npm install npm@8.6.x -g
+
+    - name: update npm
+      run: npm install -g node-gyp@8.4.x
+
+    - name: install
+      run: npm install @mapbox/node-pre-gyp@1.0.9 -g
+
     - name: npm-install
       run: npm install --ignore-scripts
 
     - name: build
-      run: npx node-pre-gyp install --build-from-source
+      run: node-pre-gyp install --build-from-source
 
     - name: test
       run: npm run test
 
     - name: pack
-      run: npx node-pre-gyp package
+      run: node-pre-gyp package
 
     - uses: actions/upload-artifact@v2
       with:
