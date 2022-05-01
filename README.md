@@ -2,7 +2,16 @@
 
 Mainly used for my another project - [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 
-Although the main node-sqlite3 got updated, but there is still no arm pre-built. So this fork is still needed.
+(2022-05-01) Update:
+
+The official build supports arm pre-built now, but it is not supported CentOS 7, so I keep using my own build.
+
+- Support CentOS 7 (As of 5.0.6, official one do not support it)
+
+
+## Outdated Description
+
+Although the upstream node-sqlite3 got updated, but there is still no arm pre-built. So this fork is still needed.
 
 - Support armv7 / arm64 pre-built
 - Support Alpine (musl) pre-built
@@ -10,7 +19,7 @@ Although the main node-sqlite3 got updated, but there is still no arm pre-built.
 - Support MacOS pre-built
 - Fix worker_threads problem
 
-PS: No electron supports
+PS: No electron supports</del>
 
 ## How to use
 
