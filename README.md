@@ -32,6 +32,14 @@ Replace require("@louislam/sqlite") in your source code
 
 ## Prepare Prebuilt
 
+### glibc & musl
+
+```bash
+npm run build-binaries
+```
+
+All files in ./build after built.
+
 glibc
 - armv7 - npm run build-linux-arm (Support glibc >=2.18 only)
 - amd64/arm64 - npm run build-linux
@@ -39,5 +47,5 @@ glibc
 musl (alpine)
 - armv7/arm64/amd64 - npm run build-linux-alpine
 
-Windows / MacOS
+### Windows / MacOS
 - Get from Github Action
