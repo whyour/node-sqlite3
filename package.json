@@ -1,10 +1,10 @@
 {
   "name": "@louislam/sqlite3",
   "description": "Asynchronous, non-blocking SQLite3 bindings",
-  "version": "15.0.3",
+  "version": "15.0.6",
   "homepage": "https://github.com/louislam/node-sqlite3",
   "author": {
-    "name": "MapBox",
+    "name": "Mapbox",
     "url": "https://mapbox.com/"
   },
   "binary": {
@@ -35,6 +35,12 @@
     "Mithgol",
     "Ben Noordhuis <ben@strongloop.com>"
   ],
+  "files": [
+    "binding.gyp",
+    "deps/",
+    "lib/*.js",
+    "src/"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/louislam/node-sqlite3.git"
@@ -61,6 +67,8 @@
     "node-gyp": "^7.1.2"
   },
   "scripts": {
+    "build": "node-pre-gyp build",
+    "build:debug": "node-pre-gyp build --debug",
     "install": "node-pre-gyp install --fallback-to-build",
     "pretest": "node test/support/createdb.js",
     "test": "mocha -R spec --timeout 480000",
@@ -78,5 +86,10 @@
     "sqlite3",
     "database"
   ],
-  "main": "./lib/sqlite3"
+  "main": "./lib/sqlite3",
+  "renovate": {
+    "extends": [
+      "@tryghost:base"
+    ]
+  }
 }
