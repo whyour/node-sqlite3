@@ -2,7 +2,7 @@
 
 Mainly used for my another project - [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 
-(2022-05-01) Update:
+##(2022-05-01) Update
 
 The official build supports arm pre-built now, but it is not supported CentOS 7, so I keep using my own build.
 
