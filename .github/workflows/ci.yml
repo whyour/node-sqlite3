@@ -40,6 +40,10 @@ jobs:
             node: 16
             host: x86
             target: x86
+          - os: macos-m1
+            node: 16
+            host: arm64
+            target: arm64
     name: ${{ matrix.os }} (node=${{ matrix.node }}, host=${{ matrix.host }}, target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@v3
@@ -47,6 +51,10 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           architecture: ${{ matrix.host }}
+
+      - name: Add yarn (self-hosted)
+        if: matrix.os == 'macos-m1'
+        run: npm install -g yarn
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -120,21 +128,21 @@ jobs:
           - linux/arm64
         variant:
           - bullseye
-          - alpine
+          - alpine3.15
         include:
           # musl x64 builds
           - target: linux/amd64
-            variant: alpine
+            variant: alpine3.15
             node: 16
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
       - name: Build binaries and test
         run: |

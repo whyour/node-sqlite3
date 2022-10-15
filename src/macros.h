@@ -125,7 +125,7 @@ inline bool OtherIsInt(Napi::Number source) {
     if ((argc != 0) && (passed_argv != NULL)) {\
       args.assign(passed_argv, passed_argv + argc);\
     }\
-    Napi::Value res = (callback).MakeCallback(Napi::Value(context), args);     \
+    Napi::Value res = (callback).Call(Napi::Value(context), args);             \
     if (res.IsEmpty()) return __VA_ARGS__;
 
 #define WORK_DEFINITION(name)                                                  \
@@ -169,13 +169,6 @@ inline bool OtherIsInt(Napi::Number source) {
     stmt->db->pending--;                                                       \
     stmt->Process();                                                           \
     stmt->db->Process();
-
-#define FETCH_COLUMN_NAMES(_handle, columns)                                   \
-    int cols = sqlite3_column_count(_handle);                                  \
-    for (int i = 0; i < cols; i++) {                                           \
-        const char* name = sqlite3_column_name(_handle, i);                    \
-        columns.push_back(Napi::String::New(env, name));                       \
-    }
 
 #define BACKUP_BEGIN(type)                                                     \
     assert(baton);                                                             \

@@ -11,14 +11,17 @@ using namespace node_sqlite3;
 Napi::Object Statement::Init(Napi::Env env, Napi::Object exports) {
     Napi::HandleScope scope(env);
 
+    // declare napi_default_method here as it is only available in Node v14.12.0+
+    napi_property_attributes napi_default_method = static_cast<napi_property_attributes>(napi_writable | napi_configurable);
+
     Napi::Function t = DefineClass(env, "Statement", {
-      InstanceMethod("bind", &Statement::Bind),
-      InstanceMethod("get", &Statement::Get),
-      InstanceMethod("run", &Statement::Run),
-      InstanceMethod("all", &Statement::All),
-      InstanceMethod("each", &Statement::Each),
-      InstanceMethod("reset", &Statement::Reset),
-      InstanceMethod("finalize", &Statement::Finalize_),
+      InstanceMethod("bind", &Statement::Bind, napi_default_method),
+      InstanceMethod("get", &Statement::Get, napi_default_method),
+      InstanceMethod("run", &Statement::Run, napi_default_method),
+      InstanceMethod("all", &Statement::All, napi_default_method),
+      InstanceMethod("each", &Statement::Each, napi_default_method),
+      InstanceMethod("reset", &Statement::Reset, napi_default_method),
+      InstanceMethod("finalize", &Statement::Finalize_, napi_default_method),
     });
 
     exports.Set("Statement", t);
@@ -442,9 +445,7 @@ void Statement::Work_AfterGet(napi_env e, napi_status status, void* data) {
         if (!cb.IsUndefined() && cb.IsFunction()) {
             if (stmt->status == SQLITE_ROW) {
                 // Create the result array from the data we acquired.
-                std::vector<Napi::String> names;
-                FETCH_COLUMN_NAMES(stmt->_handle, names);
-                Napi::Value argv[] = { env.Null(), RowToJS(env, &baton->row, names) };
+                Napi::Value argv[] = { env.Null(), RowToJS(env, &baton->row) };
                 TRY_CATCH_CALL(stmt->Value(), cb, 2, argv);
             }
             else {
@@ -586,23 +587,27 @@ void Statement::Work_AfterAll(napi_env e, napi_status status, void* data) {
         // Fire callbacks.
         Napi::Function cb = baton->callback.Value();
         if (!cb.IsUndefined() && cb.IsFunction()) {
-            Napi::Array result(Napi::Array::New(env, baton->rows.size()));
-
             if (baton->rows.size()) {
-                std::vector<Napi::String> names;
-                FETCH_COLUMN_NAMES(stmt->_handle, names);
-
                 // Create the result array from the data we acquired.
+                Napi::Array result(Napi::Array::New(env, baton->rows.size()));
                 Rows::const_iterator it = baton->rows.begin();
                 Rows::const_iterator end = baton->rows.end();
                 for (int i = 0; it < end; ++it, i++) {
                     std::unique_ptr<Row> row(*it);
-                    result.Set(i, RowToJS(env, row.get(), names));
+                    (result).Set(i, RowToJS(env,row.get()));
                 }
-            }
 
-            Napi::Value argv[] = { env.Null(), result };
-            TRY_CATCH_CALL(stmt->Value(), cb, 2, argv);
+                Napi::Value argv[] = { env.Null(), result };
+                TRY_CATCH_CALL(stmt->Value(), cb, 2, argv);
+            }
+            else {
+                // There were no result rows.
+                Napi::Value argv[] = {
+                    env.Null(),
+                    Napi::Array::New(env, 0)
+                };
+                TRY_CATCH_CALL(stmt->Value(), cb, 2, argv);
+            }
         }
     }
 
@@ -698,7 +703,6 @@ void Statement::AsyncEach(uv_async_t* handle) {
 
     Napi::Env env = async->stmt->Env();
     Napi::HandleScope scope(env);
-    Napi::Function cb = async->item_cb.Value();
 
     while (true) {
         // Get the contents out of the data cache for us to process in the JS callback.
@@ -711,11 +715,8 @@ void Statement::AsyncEach(uv_async_t* handle) {
             break;
         }
 
+        Napi::Function cb = async->item_cb.Value();
         if (!cb.IsUndefined() && cb.IsFunction()) {
-            if (async->stmt->columns.size() == 0) {
-                FETCH_COLUMN_NAMES(async->stmt->_handle, async->stmt->columns);
-            }
-
             Napi::Value argv[2];
             argv[0] = env.Null();
 
@@ -723,22 +724,22 @@ void Statement::AsyncEach(uv_async_t* handle) {
             Rows::const_iterator end = rows.end();
             for (int i = 0; it < end; ++it, i++) {
                 std::unique_ptr<Row> row(*it);
-                argv[1] = RowToJS(env, row.get(), async->stmt->columns);
+                argv[1] = RowToJS(env,row.get());
                 async->retrieved++;
                 TRY_CATCH_CALL(async->stmt->Value(), cb, 2, argv);
             }
         }
     }
 
+    Napi::Function cb = async->completed_cb.Value();
     if (async->completed) {
-        async->stmt->columns.clear();
-        Napi::Function completed_cb = async->completed_cb.Value();
-        if (!completed_cb.IsEmpty() && completed_cb.IsFunction()) {
+        if (!cb.IsEmpty() &&
+                cb.IsFunction()) {
             Napi::Value argv[] = {
                 env.Null(),
                 Napi::Number::New(env, async->retrieved)
             };
-            TRY_CATCH_CALL(async->stmt->Value(), completed_cb, 2, argv);
+            TRY_CATCH_CALL(async->stmt->Value(), cb, 2, argv);
         }
         uv_close(reinterpret_cast<uv_handle_t*>(handle), CloseCallback);
     }
@@ -798,7 +799,7 @@ void Statement::Work_AfterReset(napi_env e, napi_status status, void* data) {
     STATEMENT_END();
 }
 
-Napi::Value Statement::RowToJS(Napi::Env env, Row* row, std::vector<Napi::String> names) {
+Napi::Value Statement::RowToJS(Napi::Env env, Row* row) {
     Napi::EscapableHandleScope scope(env);
 
     Napi::Object result = Napi::Object::New(env);
@@ -828,7 +829,7 @@ Napi::Value Statement::RowToJS(Napi::Env env, Row* row, std::vector<Napi::String
             } break;
         }
 
-        result.Set(names[i], value);
+        (result).Set(Napi::String::New(env, field->name.c_str()), value);
 
         DELETE_FIELD(field);
     }
@@ -841,25 +842,30 @@ void Statement::GetRow(Row* row, sqlite3_stmt* stmt) {
 
     for (int i = 0; i < cols; i++) {
         int type = sqlite3_column_type(stmt, i);
+        const char* name = sqlite3_column_name(stmt, i);
+        if (name == NULL) {
+            assert(false);
+        }
+
         switch (type) {
             case SQLITE_INTEGER: {
-                row->push_back(new Values::Integer(i, sqlite3_column_int64(stmt, i)));
+                row->push_back(new Values::Integer(name, sqlite3_column_int64(stmt, i)));
             }   break;
             case SQLITE_FLOAT: {
-                row->push_back(new Values::Float(i, sqlite3_column_double(stmt, i)));
+                row->push_back(new Values::Float(name, sqlite3_column_double(stmt, i)));
             }   break;
             case SQLITE_TEXT: {
                 const char* text = (const char*)sqlite3_column_text(stmt, i);
                 int length = sqlite3_column_bytes(stmt, i);
-                row->push_back(new Values::Text(i, length, text));
+                row->push_back(new Values::Text(name, length, text));
             } break;
             case SQLITE_BLOB: {
                 const void* blob = sqlite3_column_blob(stmt, i);
                 int length = sqlite3_column_bytes(stmt, i);
-                row->push_back(new Values::Blob(i, length, blob));
+                row->push_back(new Values::Blob(name, length, blob));
             }   break;
             case SQLITE_NULL: {
-                row->push_back(new Values::Null(i));
+                row->push_back(new Values::Null(name));
             }   break;
             default:
                 assert(false);
