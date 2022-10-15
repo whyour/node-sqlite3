@@ -40,5 +40,7 @@ musl (alpine)
 ### Windows / MacOS
 - Get from Github Action
 
-### M1
+### Mac ARM64 (M1/M2)
 - Get from TryGhost/node-sqlite3
+- Rename to `napi-v6-darwin-arm64-unknown.tar.gz`
+- Use 7zip to rename the folder inside to `napi-v6-darwin-arm64`
