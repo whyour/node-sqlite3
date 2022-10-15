@@ -9,7 +9,7 @@ The official build supports arm pre-built now, but it is not supported CentOS 7,
 - Support CentOS 7 (As of 5.1.2, official one do not support it)
 
 
-PS: No electron supports</del>
+PS: No electron supports
 
 ## How to use
 
