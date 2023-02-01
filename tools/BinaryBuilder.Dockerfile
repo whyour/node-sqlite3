@@ -4,23 +4,18 @@ ARG TARGET
 
 FROM python:3.10-alpine
 
-RUN apk add make g++ nodejs npm && \
-    ln -s /usr/bin/python3 /usr/bin/python
+RUN apk add make g++ nodejs npm && npm install -g yarn
 
 WORKDIR /usr/src/build
 
 COPY . .
-RUN npm install --ignore-scripts
 
 ENV CFLAGS="${CFLAGS:-} -include ../src/gcc-preinclude.h"
 ENV CXXFLAGS="${CXXFLAGS:-} -include ../src/gcc-preinclude.h"
-# RUN npx node-pre-gyp configure --target_arch="$TARGET"
-# RUN npx node-pre-gyp build --target_arch="$TARGET"
 
-# RUN npx node-pre-gyp package --target_arch="$TARGET"
-RUN npx node-pre-gyp configure
-RUN npx node-pre-gyp build
+RUN yarn node-pre-gyp configure --target_arch="$TARGET"
+RUN yarn node-pre-gyp build --target_arch="$TARGET"
 
-RUN npx node-pre-gyp package
+RUN yarn node-pre-gyp package --target_arch="$TARGET"
 
 CMD ["sh"]
