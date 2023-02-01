@@ -21,14 +21,12 @@ jobs:
         node:
           - 16
         target:
-          - linux/arm64
-          - linux/amd64
-          - linux/arm64
-          - linux/ppc64le
-          - linux/s390x
-          - linux/386
-          - linux/arm/v7
-          - linux/arm/v6
+          - x64
+          - arm
+          - ia32
+          - arm64
+          - s390x
+          - ppc64
         variant:
           - alpine3.15
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
