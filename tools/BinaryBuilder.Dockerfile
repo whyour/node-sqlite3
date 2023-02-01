@@ -1,11 +1,11 @@
 ARG NODE_VERSION=16
 ARG VARIANT=bullseye
 
-FROM node:$NODE_VERSION-$VARIANT
+FROM python:3.10-alpine
 
 ARG VARIANT
 
-RUN if [[ "$VARIANT" =~ alpine* ]] ; then apk add build-base python3 --update-cache ; fi
+RUN if [[ "$VARIANT" =~ alpine* ]] ; then apk add build-base nodejs npm --update-cache ; fi
 
 WORKDIR /usr/src/build
 
