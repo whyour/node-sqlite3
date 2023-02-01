@@ -17,8 +17,4 @@ RUN node-pre-gyp install --build-from-source
 RUN npm run test
 RUN node-pre-gyp package
 
-FROM python:3.10-alpine AS release
-WORKDIR /app/build
-# Copy app files from build layer
-COPY --from=build /app/build /app/build
-
+CMD ["sh"]
