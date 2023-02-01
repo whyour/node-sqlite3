@@ -13,9 +13,28 @@ concurrency:
 jobs:
   build-qemu:
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 16
+        target:
+          - linux/arm64
+          - linux/amd64
+          - linux/arm64
+          - linux/ppc64le
+          - linux/s390x
+          - linux/386
+          - linux/arm/v7
+          - linux/arm/v6
+        variant:
+          - alpine3.15
+        # include:
+          # musl x64 builds
+          # - target: linux/amd64
+          #   variant: alpine3.15
+          #   node: 16
+    name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@v3
 
@@ -31,7 +50,7 @@ jobs:
             --file ./build-alpine.dockerfile \
             --load \
             --tag sqlite-builder \
-            --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6 \
+            --platform ${{ matrix.target }} \
             --no-cache \
             --build-arg VARIANT=${{ matrix.variant }} \
             --build-arg NODE_VERSION=${{ matrix.node }} \
