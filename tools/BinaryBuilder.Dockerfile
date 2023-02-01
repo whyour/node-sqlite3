@@ -4,7 +4,8 @@ ARG TARGET
 
 FROM python:3.10-alpine
 
-RUN apk add make g++ nodejs npm && npm install -g yarn
+RUN apk add make g++ nodejs npm
+RUN npm install -g yarn
 
 WORKDIR /usr/src/build
 
