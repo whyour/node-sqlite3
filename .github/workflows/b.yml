@@ -59,6 +59,8 @@ jobs:
             echo "TARGET=x64" >> $GITHUB_ENV
           fi
 
+          cat $GITHUB_ENV
+
       - name: Build binaries and test
         run: |
           docker buildx build \
