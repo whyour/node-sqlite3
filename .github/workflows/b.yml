@@ -31,34 +31,50 @@ jobs:
           - linux/arm/v6
         variant:
           - alpine3.15
-        # include:
-          # musl x64 builds
-          # - target: linux/amd64
-          #   variant: alpine3.15
-          #   node: 16
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          architecture: ${{ matrix.host }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+      - name: Install dependencies
+        run: yarn install --ignore-scripts
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build binaries and test
+      - name: Add env vars
+        shell: bash
         run: |
-          docker buildx build \
-            --file ./tools/BinaryBuilder.Dockerfile \
-            --load \
-            --tag sqlite-builder \
-            --platform ${{ matrix.target }} \
-            --no-cache \
-            --build-arg VARIANT=${{ matrix.variant }} \
-            --build-arg NODE_VERSION=${{ matrix.node }} \
-            .
-          CONTAINER_ID=$(docker create -it sqlite-builder)
-          docker cp $CONTAINER_ID:/usr/src/build/build/ ./build
+          echo "V=1" >> $GITHUB_ENV
+          if [ "${{ matrix.target }}" = "x86" ]; then
+            echo "TARGET=ia32" >> $GITHUB_ENV
+          else
+            echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          fi
+      - name: Add Linux env vars
+        run: |
+          echo "CFLAGS=${CFLAGS:-} -include ../src/gcc-preinclude.h" >> $GITHUB_ENV
+          echo "CXXFLAGS=${CXXFLAGS:-} -include ../src/gcc-preinclude.h" >> $GITHUB_ENV
+
+      - name: Configure build
+        run: yarn node-pre-gyp configure --target_arch=${{ env.TARGET }}
+
+      - name: Build binaries
+        run: yarn node-pre-gyp build --target_arch=${{ env.TARGET }}
+
+      - name: Print binary info
+        run: |
+          ldd lib/binding/*/node_sqlite3.node
+          echo "---"
+          nm lib/binding/*/node_sqlite3.node | grep "GLIBC_" | c++filt || true
+          echo "---"
+          file lib/binding/napi-v*/*
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Package prebuilt binaries
+        run: yarn node-pre-gyp package --target_arch=${{ env.TARGET }}
 
       - name: Upload binaries to commit artifacts
         uses: actions/upload-artifact@v3
@@ -69,7 +85,7 @@ jobs:
           retention-days: 7
 
       - name: Upload binaries to GitHub Release
-        run: yarn install --ignore-scripts && yarn node-pre-gyp-github publish
+        run: yarn node-pre-gyp-github publish
         if: matrix.node == 16
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ github.token }}
