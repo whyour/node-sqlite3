@@ -43,7 +43,7 @@ jobs:
         run: |
           echo "V=1" >> $GITHUB_ENV
           
-          if [ "${{ matrix.target }}" = "linux/arm/v7" ] || [ "${{ matrix.target }}" = "linux/arm/v6" ]; then
+          if [[ "${{ matrix.target }}" = "linux/arm/v7" ]] || [[ "${{ matrix.target }}" = "linux/arm/v6" ]]; then 
             echo "TARGET=arm" >> $GITHUB_ENV
           else if [ "${{ matrix.target }}" = "linux/arm64" ]; then
             echo "TARGET=arm64" >> $GITHUB_ENV
@@ -55,6 +55,8 @@ jobs:
             echo "TARGET=s390x" >> $GITHUB_ENV
           else if [ "${{ matrix.target }}" = "linux/386" ]; then
             echo "TARGET=ia32" >> $GITHUB_ENV
+          else
+            echo "TARGET=x64" >> $GITHUB_ENV
           fi
 
       - name: Build binaries and test
