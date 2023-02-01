@@ -1,12 +1,12 @@
 # DON'T UPDATE TO node:14-bullseye-slim, see #372.
-FROM node:14-alpine3.12 AS build
+FROM python:3.10-alpine AS build
 WORKDIR /app
 
 COPY . .
 
 # split the sqlite install here, so that it can caches the arm prebuilt
 # do not modify it, since we don't want to re-compile the arm prebuilt again
-RUN apk add make g++ python3 && \
+RUN apk add make g++ nodejs npm && \
     ln -s /usr/bin/python3 /usr/bin/python
 
 RUN npm install npm@8.6.x -g
@@ -17,7 +17,7 @@ RUN node-pre-gyp install --build-from-source
 RUN npm run test
 RUN node-pre-gyp package
 
-FROM node:14-alpine3.12 AS release
+FROM python:3.10-alpine AS release
 WORKDIR /app/build
 # Copy app files from build layer
 COPY --from=build /app/build /app/build
