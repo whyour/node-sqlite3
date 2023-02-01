@@ -42,6 +42,7 @@ jobs:
         shell: bash
         run: |
           echo "V=1" >> $GITHUB_ENV
+          
           if [ "${{ matrix.target }}" = "linux/arm/v7" ] || [ "${{ matrix.target }}" = "linux/arm/v6" ]; then
             echo "TARGET=arm" >> $GITHUB_ENV
           else if [ "${{ matrix.target }}" = "linux/arm64" ]; then
