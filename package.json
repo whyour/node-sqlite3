@@ -44,7 +44,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/whyour/node-sqlite3.gi"
+    "url": "https://github.com/whyour/node-sqlite3.git"
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.0",
