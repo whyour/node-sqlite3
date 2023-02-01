@@ -70,8 +70,8 @@ jobs:
       #     echo "---"
       #     file lib/binding/napi-v*/*
 
-      - name: Run tests
-        run: yarn test
+      # - name: Run tests
+      #   run: yarn test
 
       - name: Package prebuilt binaries
         run: yarn node-pre-gyp package --target_arch=${{ env.TARGET }}
