@@ -5,18 +5,25 @@ ARG TARGET
 FROM python:3.10-alpine
 
 RUN apk add make g++ nodejs npm
-RUN npm install -g yarn
 
 WORKDIR /usr/src/build
 
 COPY . .
 
+RUN npm install npm@8.6.x -g
+
+RUN npm install -g node-gyp@8.4.x
+
+RUN npm install @mapbox/node-pre-gyp@1.0.9 -g
+
+RUN npm install --ignore-scripts
+
 ENV CFLAGS="${CFLAGS:-} -include ../src/gcc-preinclude.h"
 ENV CXXFLAGS="${CXXFLAGS:-} -include ../src/gcc-preinclude.h"
 
-RUN yarn node-pre-gyp configure --target_arch="$TARGET"
-RUN yarn node-pre-gyp build --target_arch="$TARGET"
+RUN node-pre-gyp configure --target_arch="$TARGET"
+RUN node-pre-gyp build --target_arch="$TARGET"
 
-RUN yarn node-pre-gyp package --target_arch="$TARGET"
+RUN node-pre-gyp package --target_arch="$TARGET"
 
 CMD ["sh"]
