@@ -1,7 +1,6 @@
 name: CI
 on:
   workflow_dispatch:
-  pull_request:
   push:
     branches:
       - master
@@ -25,7 +24,6 @@ jobs:
           - linux/s390x
           - linux/386
           - linux/arm/v7
-          - linux/arm/v6
         variant:
           - alpine3.15
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
@@ -43,7 +41,7 @@ jobs:
         run: |
           echo "V=1" >> $GITHUB_ENV
           
-          if [[ "${{ matrix.target }}" = "linux/arm/v7" ]] || [[ "${{ matrix.target }}" = "linux/arm/v6" ]]; then 
+          if [[ "${{ matrix.target }}" = "linux/arm/v7" ]]; then 
             echo "TARGET=arm" >> $GITHUB_ENV
           elif [ "${{ matrix.target }}" = "linux/arm64" ]; then
             echo "TARGET=arm64" >> $GITHUB_ENV
@@ -55,8 +53,6 @@ jobs:
             echo "TARGET=s390x" >> $GITHUB_ENV
           elif [ "${{ matrix.target }}" = "linux/386" ]; then
             echo "TARGET=ia32" >> $GITHUB_ENV
-          else
-            echo "TARGET=x64" >> $GITHUB_ENV
           fi
 
           cat $GITHUB_ENV
@@ -85,7 +81,7 @@ jobs:
           retention-days: 7
 
       - name: Upload binaries to GitHub Release
-        run: yarn install --ignore-scripts && yarn node-pre-gyp-github publish
+        run: yarn install --ignore-scripts && yarn node-pre-gyp-github publish --release
         if: matrix.node == 16
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}
