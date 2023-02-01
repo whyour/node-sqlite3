@@ -88,4 +88,4 @@ jobs:
         run: yarn install --ignore-scripts && yarn node-pre-gyp-github publish
         if: matrix.node == 16
         env:
-          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}
