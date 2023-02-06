@@ -1,54 +1,22 @@
-# node-sqlite3 with CentOS 7 support
+# node-sqlite3
 
-Mainly used for my another project - [Uptime Kuma](https://github.com/louislam/uptime-kuma)
+Mainly used for my another project - [Qinglong](https://github.com/whyour/qinglong)
 
 ## What is the different between TryGhost/node-sqlite3?
 
-The official one is dropped the support for CentOS 7, but my fork supports CentOS 7. 
-
-If you want to build a Node.js application which can be installed on many Linux distributions like Uptime Kuma, this library should be useful.
-
-If your application will be just designed for new Linux distributions, you probably do not need it, just use the official one.
-
-
-PS: No electron supports
+The following architecture is supported:
+1. alpine: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x,linux/386
+2. Mac: arm/x64
+3. windows: ia32/x64
 
 ## How to use
 
 ```
-npm install @louislam/sqlite3
-npm remove sqlite3
+{
+  "sqlite3": "git+https://github.com/whyour/node-sqlite3.git",
+}
 ```
-
-Replace require("@louislam/sqlite") in your source code
 
 ## Documentation
 
 https://github.com/TryGhost/node-sqlite3
-
-## (For Maintainers/Developers Only) 
-
-###Prepare Prebuilt
-
-#### glibc & musl
-
-```bash
-npm run build-binaries
-```
-
-All files in ./build after built.
-
-glibc
-- armv7 - npm run build-linux-arm (Support glibc >=2.18 only)
-- amd64/arm64 - npm run build-linux
-
-musl (alpine)
-- armv7/arm64/amd64 - npm run build-linux-alpine
-
-#### Windows / MacOS
-- Get from Github Action
-
-#### Mac ARM64 (M1/M2)
-- Get from TryGhost/node-sqlite3
-- Rename to `napi-v6-darwin-arm64-unknown.tar.gz`
-- Use 7zip to rename the folder inside to `napi-v6-darwin-arm64`
