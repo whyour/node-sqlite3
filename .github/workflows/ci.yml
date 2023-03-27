@@ -20,7 +20,7 @@ jobs:
       matrix:
         os:
           - macos-latest
-          - ubuntu-latest
+          - ubuntu-20.04
           - windows-latest
         host:
           - x64
@@ -57,7 +57,7 @@ jobs:
         run: npm install -g yarn
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v1.3
         if: contains(matrix.os, 'windows')
         with:
           msbuild-architecture: ${{ matrix.target }}
