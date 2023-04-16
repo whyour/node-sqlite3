@@ -2,7 +2,7 @@ ARG TARGET
 
 FROM node:18-slim
 
-RUN apt install -y make g++
+RUN apt install -y build-essential
 
 WORKDIR /usr/src/build
 
