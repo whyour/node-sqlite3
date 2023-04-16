@@ -2,7 +2,7 @@ ARG TARGET
 
 FROM node:18-slim
 
-RUN apt update && apt install -y build-essential
+RUN apt update && apt install -y python3 build-essential
 
 WORKDIR /usr/src/build
 
