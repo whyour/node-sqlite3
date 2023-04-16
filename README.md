@@ -6,6 +6,7 @@ Mainly used for my another project - [Qinglong](https://github.com/whyour/qinglo
 
 The following architecture is supported:
 1. alpine: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x,linux/386
+1. debian: linux/amd64,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
 2. Mac: arm/x64
 3. windows: ia32/x64
 
