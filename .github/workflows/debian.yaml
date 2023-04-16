@@ -19,10 +19,9 @@ jobs:
           - linux/amd64
           - linux/ppc64le
           - linux/s390x
-          - linux/386
           - linux/arm/v7
         variant:
-          - alpine3.15
+          - slim
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@v3
@@ -57,7 +56,7 @@ jobs:
       - name: Build binaries and test
         run: |
           docker buildx build \
-            --file ./tools/BinaryBuilder.Dockerfile \
+            --file ./tools/BinaryBuilder-debian.Dockerfile \
             --load \
             --tag sqlite-builder \
             --platform ${{ matrix.target }} \
