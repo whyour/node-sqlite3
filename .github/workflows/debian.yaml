@@ -1,4 +1,4 @@
-name: CI1
+name: debian
 on:
   workflow_dispatch:
 env:

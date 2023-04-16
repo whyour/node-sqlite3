@@ -1,4 +1,4 @@
-name: CI1
+name: alpine
 on:
   workflow_dispatch:
 env:
