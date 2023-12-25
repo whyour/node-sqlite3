@@ -20,14 +20,14 @@ jobs:
         target:
           - x64
         node:
-          - 16
+          - 20
         include:
           - os: windows-latest
-            node: 16
+            node: 20
             host: x86
             target: x86
           - os: macos-m1
-            node: 16
+            node: 20
             host: arm64
             target: arm64
     name: ${{ matrix.os }} (node=${{ matrix.node }}, host=${{ matrix.host }}, target=${{ matrix.target }})
@@ -80,7 +80,7 @@ jobs:
 
       - name: Upload binaries to commit artifacts
         uses: actions/upload-artifact@v3
-        if: matrix.node == 16
+        if: matrix.node == 20
         with:
           name: prebuilt-binaries
           path: build/stage/*/*
@@ -88,6 +88,6 @@ jobs:
 
       - name: Upload binaries to GitHub Release
         run: node-pre-gyp-github publish
-        if: matrix.node == 16
+        if: matrix.node == 20
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}

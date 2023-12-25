@@ -1,6 +1,6 @@
 ARG TARGET
 
-FROM python:3.10-alpine3.15
+FROM python:3.11-alpine
 
 RUN apk add make g++ nodejs npm && npm install -g yarn
 

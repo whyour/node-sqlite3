@@ -1,6 +1,6 @@
 ARG TARGET
 
-FROM node:18-slim
+FROM node:20-slim
 
 RUN apt update && apt install -y python3 build-essential
 
