@@ -103,7 +103,7 @@ jobs:
         run: yarn upload
         if: matrix.node == 18
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.API_TOKEN }}
 
   build-qemu-alpine:
     runs-on: ubuntu-latest
@@ -159,7 +159,7 @@ jobs:
         run: yarn install --ignore-scripts && yarn upload
         if: matrix.node == 18
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.API_TOKEN }}
 
   build-qemu-debian:
     runs-on: ubuntu-latest
@@ -213,4 +213,4 @@ jobs:
         run: yarn install --ignore-scripts && yarn upload
         if: matrix.node == 18
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.API_TOKEN }}

@@ -3,8 +3,6 @@ ARG VARIANT=alpine3.18
 
 FROM python:3.11-$VARIANT
 
-ARG VARIANT
-
 RUN apk add build-base nodejs npm --update-cache
 
 WORKDIR /usr/src/build

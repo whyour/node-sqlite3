@@ -3,8 +3,6 @@ ARG VARIANT=bullseye
 
 FROM node:$NODE_VERSION-$VARIANT
 
-ARG VARIANT
-
 WORKDIR /usr/src/build
 
 COPY . .
