@@ -1,20 +1,21 @@
-ARG TARGET
+ARG NODE_VERSION=18
+ARG VARIANT=bullseye
 
-FROM node:20-slim
+FROM node:$NODE_VERSION-$VARIANT
 
-RUN apt update && apt install -y python3 build-essential
+ARG VARIANT
 
 WORKDIR /usr/src/build
 
 COPY . .
-
-RUN yarn install --ignore-scripts
+RUN npm install --ignore-scripts
 
 ENV CFLAGS="${CFLAGS:-} -include ../src/gcc-preinclude.h"
 ENV CXXFLAGS="${CXXFLAGS:-} -include ../src/gcc-preinclude.h"
+RUN npm run prebuild
 
-RUN yarn node-pre-gyp install --build-from-source --target_arch="$TARGET"
+RUN ldd build/**/node_sqlite3.node; nm build/**/node_sqlite3.node | grep \"GLIBC_\" | c++filt || true
 
-RUN yarn node-pre-gyp package --target_arch="$TARGET"
+RUN npm run test
 
 CMD ["sh"]

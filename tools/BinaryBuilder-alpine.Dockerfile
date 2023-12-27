@@ -1,20 +1,21 @@
-ARG TARGET
+ARG NODE_VERSION=18
+ARG VARIANT=alpine3.18
 
-FROM python:3.11-alpine3.18
+FROM python:3.11-$VARIANT
 
-RUN apk add make g++ nodejs npm && npm install -g yarn
+ARG VARIANT
+
+RUN apk add build-base nodejs npm --update-cache
 
 WORKDIR /usr/src/build
 
 COPY . .
-
-RUN yarn install --ignore-scripts
+RUN npm install --ignore-scripts
 
 ENV CFLAGS="${CFLAGS:-} -include ../src/gcc-preinclude.h"
 ENV CXXFLAGS="${CXXFLAGS:-} -include ../src/gcc-preinclude.h"
+RUN npm run prebuild
 
-RUN yarn node-pre-gyp install --build-from-source --target_arch="$TARGET"
-
-RUN yarn node-pre-gyp package --target_arch="$TARGET"
+RUN npm run test
 
 CMD ["sh"]
