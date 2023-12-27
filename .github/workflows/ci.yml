@@ -123,11 +123,11 @@ jobs:
           - linux/arm/v6
         variant:
           - bullseye
-          - alpine3.15
+          - alpine3.18
         include:
           # musl x64 builds
           - target: linux/amd64
-            variant: alpine3.15
+            variant: alpine3.18
             node: 18
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
