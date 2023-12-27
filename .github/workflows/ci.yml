@@ -1,12 +1,6 @@
 name: CI
 on:
   workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - master
-    tags:
-      - '*'
 env:
   FORCE_COLOR: 1
 concurrency:
@@ -113,7 +107,7 @@ jobs:
 
   build-qemu:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -121,6 +115,12 @@ jobs:
           - 18
         target:
           - linux/arm64
+          - linux/amd64
+          - linux/ppc64le
+          - linux/s390x
+          - linux/386
+          - linux/arm/v7
+          - linux/arm/v6
         variant:
           - bullseye
           - alpine3.15
@@ -163,6 +163,6 @@ jobs:
 
       - name: Upload binaries to GitHub Release
         run: yarn install --ignore-scripts && yarn upload
-        if: matrix.node == 18 && startsWith(github.ref, 'refs/tags/')
+        if: matrix.node == 18
         env:
           GITHUB_TOKEN: ${{ github.token }}
