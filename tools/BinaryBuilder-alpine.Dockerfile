@@ -13,6 +13,7 @@ RUN npm install --ignore-scripts
 ENV CFLAGS="${CFLAGS:-} -include ../src/gcc-preinclude.h"
 ENV CXXFLAGS="${CXXFLAGS:-} -include ../src/gcc-preinclude.h"
 RUN npm run prebuild
+RUN ls -lah prebuilds
 
 RUN npm run test
 
