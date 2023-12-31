@@ -143,7 +143,7 @@ jobs:
             --build-arg VARIANT=${{ matrix.variant }} \
             --build-arg NODE_VERSION=${{ matrix.node }} \
             .
-          CONTAINER_ID=$(docker create -it sqlite-builder)
+          CONTAINER_ID=$(docker create --platform ${{ matrix.target }} -it sqlite-builder)
           docker cp $CONTAINER_ID:/usr/src/build/build/ ./build
 
       - name: Upload binaries to commit artifacts
@@ -197,7 +197,7 @@ jobs:
             --build-arg VARIANT=${{ matrix.variant }} \
             --build-arg NODE_VERSION=${{ matrix.node }} \
             .
-          CONTAINER_ID=$(docker create -it sqlite-builder)
+          CONTAINER_ID=$(docker create --platform ${{ matrix.target }} sqlite-builder)
           docker cp $CONTAINER_ID:/usr/src/build/build/ ./build
 
       - name: Upload binaries to commit artifacts
