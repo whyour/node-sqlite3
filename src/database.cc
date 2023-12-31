@@ -118,7 +118,6 @@ void Database::Schedule(Work_Callback callback, Baton* baton, bool exclusive) {
 }
 
 Database::Database(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Database>(info) {
-    init();
     auto env = info.Env();
 
     if (info.Length() <= 0 || !info[0].IsString()) {
@@ -292,7 +291,7 @@ void Database::Work_AfterClose(napi_env e, napi_status status, void* data) {
     }
 
     if (!db->open) {
-        Napi::Value info[] = { Napi::String::New(env, "close"), argv[0] };
+        Napi::Value info[] = { Napi::String::New(env, "close") };
         EMIT_EVENT(db->Value(), 1, info);
         db->Process();
     }
