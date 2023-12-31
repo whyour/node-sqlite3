@@ -145,8 +145,7 @@ jobs:
             .
           CONTAINER_ID=$(docker create -it sqlite-builder)
           docker cp $CONTAINER_ID:/usr/src/build/prebuilds/ ./prebuilds
-          echo "build info"
-          ls -lah build
+          ls -lah prebuilds
 
       - name: Upload binaries to commit artifacts
         uses: actions/upload-artifact@v3
@@ -201,8 +200,7 @@ jobs:
             .
           CONTAINER_ID=$(docker create -it sqlite-builder)
           docker cp $CONTAINER_ID:/usr/src/build/prebuilds/ ./prebuilds
-          echo "build info"
-          ls -lah build
+          ls -lah prebuilds
 
       - name: Upload binaries to commit artifacts
         uses: actions/upload-artifact@v3
