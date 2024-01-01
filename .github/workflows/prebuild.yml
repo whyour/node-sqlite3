@@ -26,10 +26,10 @@ jobs:
             node: 18
             host: x86
             target: x86
-          - os: macos-m1
-            node: 18
-            host: arm64
-            target: arm64
+          # - os: macos-m1
+          #   node: 18
+          #   host: arm64
+          #   target: arm64
     name: ${{ matrix.os }} (node=${{ matrix.node }}, host=${{ matrix.host }}, target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
@@ -103,7 +103,7 @@ jobs:
         if: matrix.node == 18
 
   build-qemu-alpine:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
