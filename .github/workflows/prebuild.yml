@@ -122,7 +122,7 @@ jobs:
           - linux/arm/v6
         variant:
           - alpine3.18
-    name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
+    name: ${{ matrix.variant }} (target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
@@ -175,7 +175,7 @@ jobs:
           - linux/arm/v7
         variant:
           - bullseye
-    name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
+    name: ${{ matrix.variant }} (target=${{ matrix.target }})
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
 
