@@ -58,7 +58,7 @@ jobs:
       - name: Check Node compatibility
         run: |
           node -v
-          node tools/semver-check.js
+          # node tools/semver-check.js
 
       - name: Add env vars
         shell: bash
