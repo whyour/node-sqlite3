@@ -56,7 +56,9 @@ jobs:
         run: yarn install --ignore-scripts
 
       - name: Check Node compatibility
-        run: node tools/semver-check.js
+        run: |
+          node -v
+          node tools/semver-check.js
 
       - name: Add env vars
         shell: bash
