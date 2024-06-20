@@ -1,5 +1,6 @@
 name: archlinux
 on:
+  push:
   workflow_dispatch:
 env:
   FORCE_COLOR: 1
@@ -32,8 +33,9 @@ jobs:
           distro: ubuntu_latest
           run: |
             uname -a
-            curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            apt install nodejs
+            apt install -y curl
+            curl -sL https://deb.nodesource.com/setup_20.x | bash -
+            apt install -y nodejs
             node -p "process.arch"
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
