@@ -15,11 +15,11 @@ jobs:
         node:
           - 16
         target:
-          - armv6
+          # - armv6
           - armv7
-          - aarch64
-          - s390x
-          - ppc64le
+          # - aarch64
+          # - s390x
+          # - ppc64le
         variant:
           - slim
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
@@ -32,6 +32,8 @@ jobs:
           distro: ubuntu_latest
           run: |
             uname -a
+            apt install nodejs
+            node -p "process.arch"
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
         run: |
