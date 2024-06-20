@@ -31,13 +31,13 @@ jobs:
         with:
           arch: ${{ matrix.target }}
           distro: ubuntu_latest
-          install: |
-            apt-get install -y curl
-            curl -sL https://deb.nodesource.com/setup_20.x | bash -
-            apt-get install -y nodejs
           run: |
             uname -a
-            node -p "process.arch"
+            getconf LONG_BIT
+            file /bin/ls
+            dpkg --print-architecture
+            arch
+            file /lib/systemd/systemd
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
         run: |
