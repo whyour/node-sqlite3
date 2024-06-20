@@ -34,7 +34,7 @@ jobs:
           run: |
             uname -a
             getconf LONG_BIT
-            file /bin/ls
+            # file /bin/ls
             dpkg --print-architecture
             arch
             file /lib/systemd/systemd
