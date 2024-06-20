@@ -32,6 +32,7 @@ jobs:
           distro: ubuntu_latest
           run: |
             uname -a
+            curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
             apt install nodejs
             node -p "process.arch"
             echo ::set-output name=uname::$(uname -a)
