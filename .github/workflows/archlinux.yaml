@@ -31,11 +31,12 @@ jobs:
         with:
           arch: ${{ matrix.target }}
           distro: ubuntu_latest
+          install: |
+            apt-get install -y curl
+            curl -sL https://deb.nodesource.com/setup_20.x | bash -
+            apt-get install -y nodejs
           run: |
             uname -a
-            apt install -y curl
-            curl -sL https://deb.nodesource.com/setup_20.x | bash -
-            apt install -y nodejs
             node -p "process.arch"
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
