@@ -37,7 +37,7 @@ jobs:
             apt-get update
             apt-get install -y curl
             curl -sL https://deb.nodesource.com/setup_20.x | bash -
-            apt-get install nodejs npm -y
+            apt-get install nodejs -y
             getconf LONG_BIT
             node -p 'process.arch'
             npm -v
