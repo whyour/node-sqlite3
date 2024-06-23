@@ -39,6 +39,9 @@ jobs:
             curl -sL https://deb.nodesource.com/setup_20.x | bash -
             apt-get install nodejs git -y
             getconf LONG_BIT
+            ldd --version
+            ldd /bin/ls
+            getconf GNU_LIBC_VERSION
             node -p 'process.arch'
             npm -v
             
