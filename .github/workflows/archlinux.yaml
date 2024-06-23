@@ -32,10 +32,13 @@ jobs:
           arch: ${{ matrix.target }}
           distro: ubuntu_latest
           run: |
+            set -x
             uname -a
             apt-get update
             apt-get install -y curl
+            curl -sL https://deb.nodesource.com/setup_20.x | bash -
             getconf LONG_BIT
+            node -p 'process.arch'
             # file /bin/ls
             dpkg --print-architecture
             arch
