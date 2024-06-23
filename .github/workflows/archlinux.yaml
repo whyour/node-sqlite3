@@ -47,7 +47,7 @@ jobs:
             
             # file /bin/ls
             dpkg --print-architecture
-            npm i -g node-pre-gyp
+            npm i -g node-pre-gyp pnpm
             npm i -g @whyour/qinglong --loglevel verbose
             qinglong
             # file /lib/systemd/systemd
