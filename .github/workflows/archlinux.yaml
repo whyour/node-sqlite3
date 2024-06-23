@@ -50,6 +50,7 @@ jobs:
             npm i -g node-pre-gyp pnpm
             npm i -g @whyour/qinglong --loglevel verbose
             export QL_DIR=/usr/lib/node_modules/@whyour/qinglong
+            export QL_DATA_DIR=/usr/share/ql
             qinglong
             curl http://localhost:5700/api/public/health
             # file /lib/systemd/systemd
