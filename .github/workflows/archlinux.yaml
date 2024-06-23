@@ -33,11 +33,13 @@ jobs:
           distro: ubuntu_latest
           run: |
             uname -a
+            apt update
+            apt serach curl
             getconf LONG_BIT
             # file /bin/ls
             dpkg --print-architecture
             arch
-            file /lib/systemd/systemd
+            # file /lib/systemd/systemd
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
         run: |
