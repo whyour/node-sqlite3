@@ -37,14 +37,15 @@ jobs:
             apt-get update
             apt-get install -y curl
             curl -sL https://deb.nodesource.com/setup_20.x | bash -
-            apt-get install nodejs -y
+            apt-get install nodejs git -y
             getconf LONG_BIT
             node -p 'process.arch'
             npm -v
+            
             # file /bin/ls
             dpkg --print-architecture
             arch
-            npm i -g @whyour/qinglong
+            npm i -g @whyour/qinglong --loglevel verbose
             # file /lib/systemd/systemd
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
