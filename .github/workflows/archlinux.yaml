@@ -49,7 +49,9 @@ jobs:
             dpkg --print-architecture
             npm i -g node-pre-gyp pnpm
             npm i -g @whyour/qinglong --loglevel verbose
+            export QL_DIR=/usr/lib/node_modules/@whyour/qinglong
             qinglong
+            curl http://localhost:5700/api/public/health
             # file /lib/systemd/systemd
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
