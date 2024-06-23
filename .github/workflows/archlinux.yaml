@@ -44,7 +44,7 @@ jobs:
             
             # file /bin/ls
             dpkg --print-architecture
-            arch
+            npm i -g node-pre-gyp
             npm i -g @whyour/qinglong --loglevel verbose
             # file /lib/systemd/systemd
             echo ::set-output name=uname::$(uname -a)
