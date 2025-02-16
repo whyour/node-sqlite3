@@ -1,5 +1,6 @@
 name: archlinux
 on:
+  push:
   workflow_dispatch:
 env:
   FORCE_COLOR: 1
@@ -15,11 +16,11 @@ jobs:
         node:
           - 16
         target:
-          - armv6
+          # - armv6
           - armv7
-          - aarch64
-          - s390x
-          - ppc64le
+          # - aarch64
+          # - s390x
+          # - ppc64le
         variant:
           - slim
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
@@ -31,7 +32,28 @@ jobs:
           arch: ${{ matrix.target }}
           distro: ubuntu_latest
           run: |
+            set -x
             uname -a
+            apt-get update
+            apt-get install -y curl
+            curl -sL https://deb.nodesource.com/setup_20.x | bash -
+            apt-get install nodejs git -y
+            getconf LONG_BIT
+            ldd --version
+            ldd /bin/ls
+            getconf GNU_LIBC_VERSION
+            node -p 'process.arch'
+            npm -v
+            
+            # file /bin/ls
+            dpkg --print-architecture
+            npm i -g node-pre-gyp pnpm
+            npm i -g @whyour/qinglong --loglevel verbose
+            export QL_DIR=/usr/lib/node_modules/@whyour/qinglong
+            export QL_DATA_DIR=/usr/share/ql
+            qinglong
+            curl http://localhost:5700/api/public/health
+            # file /lib/systemd/systemd
             echo ::set-output name=uname::$(uname -a)
       - name: Get the output
         run: |
