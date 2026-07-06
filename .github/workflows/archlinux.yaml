@@ -25,7 +25,7 @@ jobs:
           - slim
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: uraimo/run-on-arch-action@v2
         id: runcmd
         with:
@@ -54,7 +54,7 @@ jobs:
             qinglong
             curl http://localhost:5700/api/public/health
             # file /lib/systemd/systemd
-            echo ::set-output name=uname::$(uname -a)
+            echo "uname=$(uname -a)" >> $GITHUB_OUTPUT
       - name: Get the output
         run: |
             echo "The uname output was ${{ steps.runcmd.outputs.uname }}"

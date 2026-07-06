@@ -32,14 +32,13 @@ jobs:
             target: arm64
     name: ${{ matrix.os }} (node=${{ matrix.node }}, host=${{ matrix.host }}, target=${{ matrix.target }})
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          architecture: ${{ matrix.host }}
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v2
         if: contains(matrix.os, 'windows')
         with:
           msbuild-architecture: ${{ matrix.target }}
@@ -79,10 +78,10 @@ jobs:
         run: node-pre-gyp package --target_arch=${{ env.TARGET }}
 
       - name: Upload binaries to commit artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: matrix.node == 16
         with:
-          name: prebuilt-binaries
+          name: prebuilt-binaries-${{ matrix.os }}-${{ matrix.target }}
           path: build/stage/*/*
           retention-days: 7
 
