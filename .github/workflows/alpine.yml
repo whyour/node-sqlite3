@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 16
+          - 22
         target:
           - linux/arm64
           - linux/amd64
@@ -34,23 +34,26 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Add env vars
+        id: vars
         shell: bash
         run: |
           echo "V=1" >> $GITHUB_ENV
           
           if [[ "${{ matrix.target }}" = "linux/arm/v7" ]]; then 
-            echo "TARGET=arm" >> $GITHUB_ENV
+            TARGET=arm
           elif [ "${{ matrix.target }}" = "linux/arm64" ]; then
-            echo "TARGET=arm64" >> $GITHUB_ENV
+            TARGET=arm64
           elif [ "${{ matrix.target }}" = "linux/amd64" ]; then
-            echo "TARGET=x64" >> $GITHUB_ENV
+            TARGET=x64
           elif [ "${{ matrix.target }}" = "linux/ppc64le" ]; then
-            echo "TARGET=ppc64" >> $GITHUB_ENV
+            TARGET=ppc64
           elif [ "${{ matrix.target }}" = "linux/s390x" ]; then
-            echo "TARGET=s390x" >> $GITHUB_ENV
+            TARGET=s390x
           elif [ "${{ matrix.target }}" = "linux/386" ]; then
-            echo "TARGET=ia32" >> $GITHUB_ENV
+            TARGET=ia32
           fi
+          echo "TARGET=$TARGET" >> $GITHUB_ENV
+          echo "artifact_name=prebuilt-binaries-alpine-$TARGET" >> $GITHUB_OUTPUT
 
           cat $GITHUB_ENV
 
@@ -71,14 +74,14 @@ jobs:
 
       - name: Upload binaries to commit artifacts
         uses: actions/upload-artifact@v4
-        if: matrix.node == 16
+        if: matrix.node == 22
         with:
-          name: prebuilt-binaries-alpine-${{ matrix.target }}
+          name: ${{ steps.vars.outputs.artifact_name }}
           path: build/stage/*/*
           retention-days: 7
 
       - name: Upload binaries to GitHub Release
         run: yarn install --ignore-scripts && yarn node-pre-gyp-github publish --release
-        if: matrix.node == 16
+        if: matrix.node == 22
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}
