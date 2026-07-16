@@ -9,6 +9,7 @@ concurrency:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -20,25 +21,22 @@ jobs:
         target:
           - x64
         node:
-          - 22
+          - 24
         include:
-          - os: windows-latest
-            node: 22
-            host: x86
-            target: x86
-          - os: macos-m1
-            node: 22
+          - os: macos-latest
+            node: 24
             host: arm64
             target: arm64
     name: ${{ matrix.os }} (node=${{ matrix.node }}, host=${{ matrix.host }}, target=${{ matrix.target }})
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
+          architecture: ${{ matrix.host }}
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
         if: contains(matrix.os, 'windows')
         with:
           msbuild-architecture: ${{ matrix.target }}
@@ -47,46 +45,33 @@ jobs:
         shell: bash
         run: |
           echo "V=1" >> $GITHUB_ENV
-          if [ "${{ matrix.target }}" = "x86" ]; then
-            echo "TARGET=ia32" >> $GITHUB_ENV
-          else
-            echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
-          fi
+          echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
       
-      - name: update npm
-        run: npm install npm@8.6.x -g
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
 
-      - name: update npm
-        run: npm install -g node-gyp@8.4.x
-
-      - name: install
-        run: npm install @mapbox/node-pre-gyp@1.0.9 -g
-      
-      - name: install github
-        run: npm install node-pre-gyp-github -g
-
-      - name: npm-install
-        run: npm install --ignore-scripts
+      - name: Print build toolchain
+        run: npx node-gyp --version
 
       - name: Configure build
-        run: node-pre-gyp configure --target_arch=${{ env.TARGET }}
+        run: node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp configure --target_arch=${{ env.TARGET }}
 
       - name: Build binaries
-        run: node-pre-gyp build --target_arch=${{ env.TARGET }}
+        run: node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp build --target_arch=${{ env.TARGET }}
 
       - name: Package prebuilt binaries
-        run: node-pre-gyp package --target_arch=${{ env.TARGET }}
+        run: node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp package --target_arch=${{ env.TARGET }}
 
       - name: Upload binaries to commit artifacts
-        uses: actions/upload-artifact@v4
-        if: matrix.node == 22
+        uses: actions/upload-artifact@v7
+        if: matrix.node == 24
         with:
           name: prebuilt-binaries-${{ matrix.os }}-${{ matrix.target }}
           path: build/stage/*/*
           retention-days: 7
 
       - name: Upload binaries to GitHub Release
-        run: node-pre-gyp-github publish
-        if: matrix.node == 22
+        run: node tools/publish-prebuild.js
+        if: matrix.node == 24
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}

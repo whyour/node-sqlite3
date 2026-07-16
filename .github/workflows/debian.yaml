@@ -12,25 +12,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node:
-          - 22
-        target:
-          - linux/arm64
-          - linux/amd64
-          - linux/ppc64le
-          - linux/s390x
-          - linux/arm/v7
-        variant:
-          - slim
-    name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
+        include:
+          - target: linux/amd64
+            node: 24
+            node_gyp: 12
+          - target: linux/arm64
+            node: 24
+            node_gyp: 12
+          - target: linux/ppc64le
+            node: 24
+            node_gyp: 12
+          - target: linux/arm/v7
+            node: 22
+            node_gyp: 12
+          - target: linux/s390x
+            node: 20
+            node_gyp: 12
+    name: slim (node=${{ matrix.node }}, target=${{ matrix.target }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Add env vars
         id: vars
@@ -48,8 +54,6 @@ jobs:
             TARGET=ppc64
           elif [ "${{ matrix.target }}" = "linux/s390x" ]; then
             TARGET=s390x
-          elif [ "${{ matrix.target }}" = "linux/386" ]; then
-            TARGET=ia32
           fi
           echo "TARGET=$TARGET" >> $GITHUB_ENV
           echo "artifact_name=prebuilt-binaries-debian-$TARGET" >> $GITHUB_OUTPUT
@@ -64,23 +68,39 @@ jobs:
             --tag sqlite-builder \
             --platform ${{ matrix.target }} \
             --no-cache \
-            --build-arg VARIANT=${{ matrix.variant }} \
+            --build-arg VARIANT=slim \
             --build-arg TARGET=${{ env.TARGET }} \
             --build-arg NODE_VERSION=${{ matrix.node }} \
+            --build-arg NODE_GYP_VERSION=${{ matrix.node_gyp }} \
             .
           CONTAINER_ID=$(docker create -it sqlite-builder)
           docker cp $CONTAINER_ID:/usr/src/build/build/ ./build
 
+      - name: Test database I/O
+        run: |
+          docker run --rm \
+            sqlite-builder \
+            node node_modules/mocha/bin/mocha --timeout 480000 \
+            test/io_compat.test.js test/musl_legacy_io.test.js
+
+      - name: Verify glibc binary uses positional I/O
+        run: |
+          docker run --rm sqlite-builder sh -c '
+            nm -u lib/binding/*/node_sqlite3.node | grep -Eq "[[:space:]]pwrite(64)?(@|$)"
+          '
+
       - name: Upload binaries to commit artifacts
-        uses: actions/upload-artifact@v4
-        if: matrix.node == 22
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.vars.outputs.artifact_name }}
           path: build/stage/*/*
           retention-days: 7
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
       - name: Upload binaries to GitHub Release
-        run: yarn install --ignore-scripts && yarn node-pre-gyp-github publish --release
-        if: matrix.node == 22
+        run: npm ci --ignore-scripts && node tools/publish-prebuild.js
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}

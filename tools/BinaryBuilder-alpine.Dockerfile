@@ -1,20 +1,19 @@
+FROM python:3.11-alpine
 ARG TARGET
 
-FROM python:3.10-alpine3.15
-
-RUN apk add make g++ nodejs npm && npm install -g yarn
+RUN apk add --no-cache make g++ nodejs npm
 
 WORKDIR /usr/src/build
 
 COPY . .
 
-RUN yarn install --ignore-scripts
+RUN npm ci --ignore-scripts
 
-ENV CFLAGS="${CFLAGS:-} -include ../src/gcc-preinclude.h"
-ENV CXXFLAGS="${CXXFLAGS:-} -include ../src/gcc-preinclude.h"
+ENV CFLAGS="-include ../src/gcc-preinclude.h -DSQLITE_MUSL_LEGACY_IO=1"
+ENV CXXFLAGS="-include ../src/gcc-preinclude.h"
 
-RUN yarn node-pre-gyp install --build-from-source --target_arch="$TARGET"
+RUN node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp install --build-from-source --target_arch="$TARGET"
 
-RUN yarn node-pre-gyp package --target_arch="$TARGET"
+RUN node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp package --target_arch="$TARGET"
 
 CMD ["sh"]

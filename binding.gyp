@@ -41,6 +41,11 @@
             "dependencies": [
               "<!(node -p \"require('node-addon-api').gyp\")",
               "deps/sqlite3.gyp:sqlite3"
+            ],
+            "conditions": [
+              [ "OS=='linux'", {
+                "ldflags": [ "-Wl,-Bsymbolic" ]
+              } ]
             ]
         }
         ]

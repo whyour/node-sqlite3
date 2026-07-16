@@ -110,6 +110,12 @@
         'action_before_build',
       ],
       'conditions': [
+        ['OS == "linux"', {
+          'defines': [
+            'HAVE_PREAD=1',
+            'HAVE_PWRITE=1'
+          ]
+        }],
         ["sqlite_magic != ''", {
             'defines': [
               'SQLITE_FILE_HEADER="<(sqlite_magic)"'
