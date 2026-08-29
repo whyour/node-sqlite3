@@ -206,6 +206,7 @@ inline bool OtherIsInt(Napi::Number source) {
         switch ((field)->type) {                                               \
             case SQLITE_INTEGER: delete (Values::Integer*)(field); break;      \
             case SQLITE_FLOAT:   delete (Values::Float*)(field); break;        \
+            case Values::DATETIME: delete (Values::DateTime*)(field); break;   \
             case SQLITE_TEXT:    delete (Values::Text*)(field); break;         \
             case SQLITE_BLOB:    delete (Values::Blob*)(field); break;         \
             case SQLITE_NULL:    delete (Values::Null*)(field); break;         \

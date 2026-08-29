@@ -1,3 +1,4 @@
+#include <cmath>
 #include <string.h>
 #include <napi.h>
 #include <uv.h>
@@ -37,6 +38,22 @@ bool OtherInstanceOf(Napi::Object source, const char* object_type) {
     }
 
     return false;
+}
+
+bool IsDateTimeColumn(sqlite3_stmt* stmt, int column) {
+    const char* declaredType = sqlite3_column_decltype(stmt, column);
+    if (declaredType == NULL || sqlite3_strnicmp(declaredType, "DATETIME", 8) != 0) {
+        return false;
+    }
+
+    const char suffix = declaredType[8];
+    return suffix == '\0' || suffix == '(' || suffix == ' ';
+}
+
+bool IsValidJavaScriptDate(double milliseconds) {
+    return std::isfinite(milliseconds) &&
+        milliseconds >= -8640000000000000.0 &&
+        milliseconds <= 8640000000000000.0;
 }
 
 void Statement::Process() {
@@ -818,6 +835,14 @@ Napi::Value Statement::RowToJS(Napi::Env env, Row* row) {
             case SQLITE_FLOAT: {
                 value = Napi::Number::New(env, ((Values::Float*)field)->value);
             } break;
+            case Values::DATETIME: {
+                Napi::Object date = Napi::Date::New(
+                    env,
+                    ((Values::DateTime*)field)->value
+                ).As<Napi::Object>();
+                Napi::Function toISOString = date.Get("toISOString").As<Napi::Function>();
+                value = toISOString.Call(date, {});
+            } break;
             case SQLITE_TEXT: {
                 value = Napi::String::New(env, ((Values::Text*)field)->value.c_str(), ((Values::Text*)field)->value.size());
             } break;
@@ -849,10 +874,23 @@ void Statement::GetRow(Row* row, sqlite3_stmt* stmt) {
 
         switch (type) {
             case SQLITE_INTEGER: {
-                row->push_back(new Values::Integer(name, sqlite3_column_int64(stmt, i)));
+                sqlite3_int64 integer = sqlite3_column_int64(stmt, i);
+                double milliseconds = static_cast<double>(integer);
+                if (IsDateTimeColumn(stmt, i) && IsValidJavaScriptDate(milliseconds)) {
+                    row->push_back(new Values::DateTime(name, milliseconds));
+                }
+                else {
+                    row->push_back(new Values::Integer(name, integer));
+                }
             }   break;
             case SQLITE_FLOAT: {
-                row->push_back(new Values::Float(name, sqlite3_column_double(stmt, i)));
+                double number = sqlite3_column_double(stmt, i);
+                if (IsDateTimeColumn(stmt, i) && IsValidJavaScriptDate(number)) {
+                    row->push_back(new Values::DateTime(name, number));
+                }
+                else {
+                    row->push_back(new Values::Float(name, number));
+                }
             }   break;
             case SQLITE_TEXT: {
                 const char* text = (const char*)sqlite3_column_text(stmt, i);
