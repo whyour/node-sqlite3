@@ -59,6 +59,9 @@ jobs:
       - name: Build binaries
         run: node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp build --target_arch=${{ env.TARGET }}
 
+      - name: Test value compatibility
+        run: node node_modules/mocha/bin/mocha --timeout 480000 test/datetime_compat.test.js test/value_compat.test.js
+
       - name: Package prebuilt binaries
         run: node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp package --target_arch=${{ env.TARGET }}
 

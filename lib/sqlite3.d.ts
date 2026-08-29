@@ -64,7 +64,7 @@ export const cached: {
 };
 
 export interface RunResult extends Statement {
-    lastID: number;
+    lastID: number | bigint;
     changes: number;
 }
 
@@ -126,13 +126,15 @@ export class Database extends events.EventEmitter {
 
     on(event: "trace", listener: (sql: string) => void): this;
     on(event: "profile", listener: (sql: string, time: number) => void): this;
-    on(event: "change", listener: (type: string, database: string, table: string, rowid: number) => void): this;
+    on(event: "change", listener: (type: string, database: string, table: string, rowid: number | bigint) => void): this;
     on(event: "error", listener: (err: Error) => void): this;
     on(event: "open" | "close", listener: () => void): this;
     on(event: string, listener: (...args: any[]) => void): this;
 
     configure(option: "busyTimeout", value: number): void;
     configure(option: "limit", id: number, value: number): void;
+    configure(option: "dateMode", value: "raw" | "iso-milliseconds"): void;
+    configure(option: "integerMode", value: "number" | "safe" | "bigint"): void;
 
     loadExtension(filename: string, callback?: (err: Error | null) => void): this;
 

@@ -6,7 +6,7 @@ Mainly used for my another project - [Qinglong](https://github.com/whyour/qinglo
 
 The following architecture is supported:
 
-1. Alpine (required): linux/amd64, linux/arm/v6, linux/arm/v7,
+1. Alpine (required): linux/amd64, linux/arm/v7,
    linux/arm64, linux/ppc64le, linux/s390x, linux/386
 2. Debian (required): linux/amd64, linux/arm/v7, linux/arm64,
    linux/ppc64le, linux/s390x
@@ -24,9 +24,40 @@ The following architecture is supported:
 
 https://github.com/TryGhost/node-sqlite3
 
+## Value conversion modes
+
+SQLite does not have a dedicated date storage class. Numeric `DATETIME`
+columns therefore stay numeric by default, preserving Unix seconds, Julian
+days, and application-specific values. Applications whose legacy schema uses
+JavaScript epoch milliseconds can opt in before reading rows:
+
+```js
+db.configure('dateMode', 'iso-milliseconds');
+```
+
+The conversion applies only to direct result columns for which SQLite exposes
+a `DATETIME` declaration. Expressions such as `max(created_at)` have no
+declared type metadata and remain unchanged.
+
+SQLite integers are returned as JavaScript numbers by default for compatibility.
+Use `safe` to return only integers outside JavaScript's safe range as `bigint`,
+or `bigint` to return every SQLite integer as `bigint`:
+
+```js
+db.configure('integerMode', 'safe');
+db.configure('integerMode', 'bigint');
+```
+
+JavaScript `bigint` parameters are accepted across the full signed 64-bit
+SQLite range. JavaScript `Date` parameters are stored as ISO-8601 text.
+
 ## Alpine legacy-host compatibility
 
-Alpine prebuilds define `SQLITE_MUSL_LEGACY_IO=1`. The bundled SQLite Unix
+Alpine prebuilds define `SQLITE_MUSL_LEGACY_IO=1`. ARM packages target ARMv7;
+ARMv6 and ARMv7 cannot be distinguished by the generic Node.js `arm` package
+name, so publishing both would silently overwrite one architecture. ARMv6 is
+not supported by the prebuilt package and must explicitly build from source. The
+bundled SQLite Unix
 VFS then uses its existing `lseek` plus `read`/`write` fallback instead of
 musl's `pread`/`pwrite` wrappers. This keeps the module usable when an older
 host seccomp profile rejects `pwritev2` with `EPERM`.

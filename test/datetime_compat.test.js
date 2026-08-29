@@ -19,8 +19,31 @@ describe('DATETIME compatibility', function() {
         db.close(done);
     });
 
-    it('returns legacy numeric DATETIME values as ISO strings', function(done) {
+    it('preserves SQLite numeric date formats by default', function(done) {
         var milliseconds = 1690000000000;
+        var unixSeconds = 1690000000;
+        var julianDay = 2460000.5;
+        db.run(
+            'INSERT INTO events (happened_at, precise_at, count) VALUES (?, ?, ?)',
+            unixSeconds,
+            julianDay,
+            milliseconds,
+            function(err) {
+                assert.ifError(err);
+                db.get('SELECT * FROM events', function(selectErr, row) {
+                    assert.ifError(selectErr);
+                    assert.strictEqual(row.happened_at, unixSeconds);
+                    assert.strictEqual(row.precise_at, julianDay);
+                    assert.strictEqual(row.count, milliseconds);
+                    done();
+                });
+            }
+        );
+    });
+
+    it('converts declared numeric DATETIME columns only when explicitly enabled', function(done) {
+        var milliseconds = 1690000000000;
+        db.configure('dateMode', 'iso-milliseconds');
         db.run(
             'INSERT INTO events (happened_at, precise_at, count) VALUES (?, ?, ?)',
             milliseconds,
@@ -30,18 +53,32 @@ describe('DATETIME compatibility', function() {
                 assert.ifError(err);
                 db.get('SELECT * FROM events', function(selectErr, row) {
                     assert.ifError(selectErr);
-                    assert.equal(row.happened_at, new Date(milliseconds).toISOString());
-                    assert.equal(row.precise_at, new Date(milliseconds + 0.5).toISOString());
-                    assert.equal(row.count, milliseconds);
+                    assert.strictEqual(row.happened_at, new Date(milliseconds).toISOString());
+                    assert.strictEqual(row.precise_at, new Date(milliseconds + 0.5).toISOString());
+                    assert.strictEqual(row.count, milliseconds);
                     done();
                 });
             }
         );
     });
 
+    it('does not guess the type of expressions without declared metadata', function(done) {
+        var milliseconds = 1690000000000;
+        db.configure('dateMode', 'iso-milliseconds');
+        db.run('INSERT INTO events (happened_at) VALUES (?)', milliseconds, function(err) {
+            assert.ifError(err);
+            db.get('SELECT max(happened_at) AS happened_at FROM events', function(selectErr, row) {
+                assert.ifError(selectErr);
+                assert.strictEqual(row.happened_at, milliseconds);
+                done();
+            });
+        });
+    });
+
     it('keeps text and out-of-range DATETIME values unchanged', function(done) {
         var iso = '2026-08-29T00:00:00.000Z';
         var outOfRange = 8640000000000001;
+        db.configure('dateMode', 'iso-milliseconds');
         db.run(
             'INSERT INTO events (happened_at, precise_at) VALUES (?, ?)',
             iso,
@@ -50,8 +87,8 @@ describe('DATETIME compatibility', function() {
                 assert.ifError(err);
                 db.get('SELECT * FROM events', function(selectErr, row) {
                     assert.ifError(selectErr);
-                    assert.equal(row.happened_at, iso);
-                    assert.equal(row.precise_at, outOfRange);
+                    assert.strictEqual(row.happened_at, iso);
+                    assert.strictEqual(row.precise_at, outOfRange);
                     done();
                 });
             }
@@ -62,9 +99,15 @@ describe('DATETIME compatibility', function() {
         db.all('PRAGMA table_info(events)', function(err, rows) {
             assert.ifError(err);
             rows.forEach(function(row) {
-                assert.equal(typeof row.type, 'string');
+                assert.strictEqual(typeof row.type, 'string');
             });
             done();
         });
+    });
+
+    it('rejects unknown date modes', function() {
+        assert.throws(function() {
+            db.configure('dateMode', 'automatic');
+        }, /dateMode must be raw or iso-milliseconds/);
     });
 });

@@ -200,16 +200,23 @@ template <class T> Values::Field*
         std::string val = source.As<Napi::String>().Utf8Value();
         return new Values::Text(pos, val.length(), val.c_str());
     }
-    else if (OtherInstanceOf(source.As<Object>(), "RegExp")) {
-        std::string val = source.ToString().Utf8Value();
-        return new Values::Text(pos, val.length(), val.c_str());
-    }
     else if (source.IsNumber()) {
-        if (OtherIsInt(source.As<Napi::Number>())) {
-            return new Values::Integer(pos, source.As<Napi::Number>().Int32Value());
-        } else {
-            return new Values::Float(pos, source.As<Napi::Number>().DoubleValue());
+        double value = source.As<Napi::Number>().DoubleValue();
+        if (std::isfinite(value) && std::trunc(value) == value &&
+                value >= -9007199254740991.0 && value <= 9007199254740991.0) {
+            return new Values::Integer(pos, static_cast<int64_t>(value));
         }
+        return new Values::Float(pos, value);
+    }
+    else if (source.IsBigInt()) {
+        bool lossless = false;
+        int64_t value = source.As<Napi::BigInt>().Int64Value(&lossless);
+        if (!lossless) {
+            Napi::RangeError::New(source.Env(), "BigInt value is outside SQLite's signed 64-bit integer range")
+                .ThrowAsJavaScriptException();
+            return NULL;
+        }
+        return new Values::Integer(pos, value);
     }
     else if (source.IsBoolean()) {
         return new Values::Integer(pos, source.As<Napi::Boolean>().Value() ? 1 : 0);
@@ -221,8 +228,19 @@ template <class T> Values::Field*
         Napi::Buffer<char> buffer = source.As<Napi::Buffer<char>>();
         return new Values::Blob(pos, buffer.Length(), buffer.Data());
     }
-    else if (OtherInstanceOf(source.As<Object>(), "Date")) {
-        return new Values::Float(pos, source.ToNumber().DoubleValue());
+    else if (source.IsObject() && OtherInstanceOf(source.As<Object>(), "Date")) {
+        Napi::Object date = source.As<Napi::Object>();
+        Napi::Function toISOString = date.Get("toISOString").As<Napi::Function>();
+        Napi::Value iso = toISOString.Call(date, {});
+        if (!iso.IsString()) {
+            return NULL;
+        }
+        std::string value = iso.As<Napi::String>().Utf8Value();
+        return new Values::Text(pos, value.length(), value.c_str());
+    }
+    else if (source.IsObject() && OtherInstanceOf(source.As<Object>(), "RegExp")) {
+        std::string val = source.ToString().Utf8Value();
+        return new Values::Text(pos, val.length(), val.c_str());
     }
     else if (source.IsObject()) {
         Napi::String napiVal = Napi::String::New(source.Env(), "[object Object]");
@@ -291,6 +309,11 @@ template <class T> T* Statement::Bind(const Napi::CallbackInfo& info, int start,
         }
     }
 
+    if (env.IsExceptionPending()) {
+        delete baton;
+        return NULL;
+    }
+
     return baton;
 }
 
@@ -319,7 +342,7 @@ bool Statement::Bind(const Parameters & parameters) {
 
             switch (field->type) {
                 case SQLITE_INTEGER: {
-                    status = sqlite3_bind_int(_handle, pos,
+                    status = sqlite3_bind_int64(_handle, pos,
                         ((Values::Integer*)field)->value);
                 } break;
                 case SQLITE_FLOAT: {
@@ -332,9 +355,11 @@ bool Statement::Bind(const Parameters & parameters) {
                         ((Values::Text*)field)->value.size(), SQLITE_TRANSIENT);
                 } break;
                 case SQLITE_BLOB: {
-                    status = sqlite3_bind_blob(_handle, pos,
-                        ((Values::Blob*)field)->value,
-                        ((Values::Blob*)field)->length, SQLITE_TRANSIENT);
+                    Values::Blob* blob = (Values::Blob*)field;
+                    status = blob->length == 0
+                        ? sqlite3_bind_zeroblob(_handle, pos, 0)
+                        : sqlite3_bind_blob(_handle, pos, blob->value,
+                            blob->length, SQLITE_TRANSIENT);
                 } break;
                 case SQLITE_NULL: {
                     status = sqlite3_bind_null(_handle, pos);
@@ -357,7 +382,9 @@ Napi::Value Statement::Bind(const Napi::CallbackInfo& info) {
 
     Baton* baton = stmt->Bind<Baton>(info);
     if (baton == NULL) {
-        Napi::TypeError::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        if (!env.IsExceptionPending()) {
+            Napi::TypeError::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        }
         return env.Null();
     }
     else {
@@ -409,7 +436,9 @@ Napi::Value Statement::Get(const Napi::CallbackInfo& info) {
 
     Baton* baton = stmt->Bind<RowBaton>(info);
     if (baton == NULL) {
-        Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        if (!env.IsExceptionPending()) {
+            Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        }
         return env.Null();
     }
     else {
@@ -441,7 +470,7 @@ void Statement::Work_Get(napi_env e, void* data) {
 
         if (stmt->status == SQLITE_ROW) {
             // Acquire one result row before returning.
-            GetRow(&baton->row, stmt->_handle);
+            GetRow(&baton->row, stmt);
         }
     }
 }
@@ -462,7 +491,7 @@ void Statement::Work_AfterGet(napi_env e, napi_status status, void* data) {
         if (IS_FUNCTION(cb)) {
             if (stmt->status == SQLITE_ROW) {
                 // Create the result array from the data we acquired.
-                Napi::Value argv[] = { env.Null(), RowToJS(env, &baton->row) };
+                Napi::Value argv[] = { env.Null(), RowToJS(env, &baton->row, stmt->db) };
                 TRY_CATCH_CALL(stmt->Value(), cb, 2, argv);
             }
             else {
@@ -481,7 +510,9 @@ Napi::Value Statement::Run(const Napi::CallbackInfo& info) {
 
     Baton* baton = stmt->Bind<RunBaton>(info);
     if (baton == NULL) {
-        Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        if (!env.IsExceptionPending()) {
+            Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        }
         return env.Null();
     }
     else {
@@ -534,7 +565,16 @@ void Statement::Work_AfterRun(napi_env e, napi_status status, void* data) {
         // Fire callbacks.
         Napi::Function cb = baton->callback.Value();
         if (IS_FUNCTION(cb)) {
-            (stmt->Value()).Set(Napi::String::New(env, "lastID"), Napi::Number::New(env, baton->inserted_id));
+            Napi::Value insertedId;
+            if (stmt->db->integer_mode == Database::INTEGER_BIGINT ||
+                    (stmt->db->integer_mode == Database::INTEGER_SAFE &&
+                     (baton->inserted_id < -9007199254740991LL || baton->inserted_id > 9007199254740991LL))) {
+                insertedId = Napi::BigInt::New(env, static_cast<int64_t>(baton->inserted_id));
+            }
+            else {
+                insertedId = Napi::Number::New(env, baton->inserted_id);
+            }
+            (stmt->Value()).Set(Napi::String::New(env, "lastID"), insertedId);
             (stmt->Value()).Set( Napi::String::New(env, "changes"), Napi::Number::New(env, baton->changes));
 
             Napi::Value argv[] = { env.Null() };
@@ -551,7 +591,9 @@ Napi::Value Statement::All(const Napi::CallbackInfo& info) {
 
     Baton* baton = stmt->Bind<RowsBaton>(info);
     if (baton == NULL) {
-        Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        if (!env.IsExceptionPending()) {
+            Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        }
         return env.Null();
     }
     else {
@@ -578,7 +620,7 @@ void Statement::Work_All(napi_env e, void* data) {
     if (stmt->Bind(baton->parameters)) {
         while ((stmt->status = sqlite3_step(stmt->_handle)) == SQLITE_ROW) {
             Row* row = new Row();
-            GetRow(row, stmt->_handle);
+            GetRow(row, stmt);
             baton->rows.push_back(row);
         }
 
@@ -611,7 +653,7 @@ void Statement::Work_AfterAll(napi_env e, napi_status status, void* data) {
                 Rows::const_iterator end = baton->rows.end();
                 for (int i = 0; it < end; ++it, i++) {
                     std::unique_ptr<Row> row(*it);
-                    (result).Set(i, RowToJS(env,row.get()));
+                    (result).Set(i, RowToJS(env, row.get(), stmt->db));
                 }
 
                 Napi::Value argv[] = { env.Null(), result };
@@ -644,7 +686,9 @@ Napi::Value Statement::Each(const Napi::CallbackInfo& info) {
 
     EachBaton* baton = stmt->Bind<EachBaton>(info, 0, last);
     if (baton == NULL) {
-        Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        if (!env.IsExceptionPending()) {
+            Napi::Error::New(env, "Data type is not supported").ThrowAsJavaScriptException();
+        }
         return env.Null();
     }
     else {
@@ -686,7 +730,7 @@ void Statement::Work_Each(napi_env e, void* data) {
             if (stmt->status == SQLITE_ROW) {
                 sqlite3_mutex_leave(mtx);
                 Row* row = new Row();
-                GetRow(row, stmt->_handle);
+                GetRow(row, stmt);
                 NODE_SQLITE3_MUTEX_LOCK(&async->mutex)
                 async->data.push_back(row);
                 retrieved++;
@@ -741,7 +785,7 @@ void Statement::AsyncEach(uv_async_t* handle) {
             Rows::const_iterator end = rows.end();
             for (int i = 0; it < end; ++it, i++) {
                 std::unique_ptr<Row> row(*it);
-                argv[1] = RowToJS(env,row.get());
+                argv[1] = RowToJS(env, row.get(), async->stmt->db);
                 async->retrieved++;
                 TRY_CATCH_CALL(async->stmt->Value(), cb, 2, argv);
             }
@@ -816,7 +860,7 @@ void Statement::Work_AfterReset(napi_env e, napi_status status, void* data) {
     STATEMENT_END();
 }
 
-Napi::Value Statement::RowToJS(Napi::Env env, Row* row) {
+Napi::Value Statement::RowToJS(Napi::Env env, Row* row, Database* db) {
     Napi::EscapableHandleScope scope(env);
 
     Napi::Object result = Napi::Object::New(env);
@@ -830,7 +874,15 @@ Napi::Value Statement::RowToJS(Napi::Env env, Row* row) {
 
         switch (field->type) {
             case SQLITE_INTEGER: {
-                value = Napi::Number::New(env, ((Values::Integer*)field)->value);
+                int64_t integer = ((Values::Integer*)field)->value;
+                if (db->integer_mode == Database::INTEGER_BIGINT ||
+                        (db->integer_mode == Database::INTEGER_SAFE &&
+                         (integer < -9007199254740991LL || integer > 9007199254740991LL))) {
+                    value = Napi::BigInt::New(env, integer);
+                }
+                else {
+                    value = Napi::Number::New(env, integer);
+                }
             } break;
             case SQLITE_FLOAT: {
                 value = Napi::Number::New(env, ((Values::Float*)field)->value);
@@ -847,7 +899,10 @@ Napi::Value Statement::RowToJS(Napi::Env env, Row* row) {
                 value = Napi::String::New(env, ((Values::Text*)field)->value.c_str(), ((Values::Text*)field)->value.size());
             } break;
             case SQLITE_BLOB: {
-                value = Napi::Buffer<char>::Copy(env, ((Values::Blob*)field)->value, ((Values::Blob*)field)->length);
+                Values::Blob* blob = (Values::Blob*)field;
+                value = blob->length == 0
+                    ? Napi::Buffer<char>::New(env, 0)
+                    : Napi::Buffer<char>::Copy(env, blob->value, blob->length);
             } break;
             case SQLITE_NULL: {
                 value = env.Null();
@@ -862,7 +917,8 @@ Napi::Value Statement::RowToJS(Napi::Env env, Row* row) {
     return scope.Escape(result);
 }
 
-void Statement::GetRow(Row* row, sqlite3_stmt* stmt) {
+void Statement::GetRow(Row* row, Statement* statement) {
+    sqlite3_stmt* stmt = statement->_handle;
     int cols = sqlite3_column_count(stmt);
 
     for (int i = 0; i < cols; i++) {
@@ -876,7 +932,8 @@ void Statement::GetRow(Row* row, sqlite3_stmt* stmt) {
             case SQLITE_INTEGER: {
                 sqlite3_int64 integer = sqlite3_column_int64(stmt, i);
                 double milliseconds = static_cast<double>(integer);
-                if (IsDateTimeColumn(stmt, i) && IsValidJavaScriptDate(milliseconds)) {
+                if (statement->db->date_mode == Database::DATE_ISO_MILLISECONDS &&
+                        IsDateTimeColumn(stmt, i) && IsValidJavaScriptDate(milliseconds)) {
                     row->push_back(new Values::DateTime(name, milliseconds));
                 }
                 else {
@@ -885,7 +942,8 @@ void Statement::GetRow(Row* row, sqlite3_stmt* stmt) {
             }   break;
             case SQLITE_FLOAT: {
                 double number = sqlite3_column_double(stmt, i);
-                if (IsDateTimeColumn(stmt, i) && IsValidJavaScriptDate(number)) {
+                if (statement->db->date_mode == Database::DATE_ISO_MILLISECONDS &&
+                        IsDateTimeColumn(stmt, i) && IsValidJavaScriptDate(number)) {
                     row->push_back(new Values::DateTime(name, number));
                 }
                 else {

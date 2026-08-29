@@ -15,13 +15,13 @@ describe('data types', function() {
         db.exec('DELETE FROM txt_table; DELETE FROM int_table; DELETE FROM flt_table;', done);
     });
 
-    it('should serialize Date()', function(done) {
+    it('should serialize Date() as ISO text', function(done) {
         var date = new Date();
         db.run("INSERT INTO int_table VALUES(?)", date, function (err) {
             if (err) throw err;
             db.get("SELECT int FROM int_table", function(err, row) {
                 if (err) throw err;
-                assert.equal(row.int, +date);
+                assert.strictEqual(row.int, date.toISOString());
                 done();
             });
         });

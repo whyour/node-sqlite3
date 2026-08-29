@@ -20,7 +20,6 @@ jobs:
           - linux/ppc64le
           - linux/s390x
           - linux/386
-          - linux/arm/v6
           - linux/arm/v7
         variant:
           - alpine
@@ -40,10 +39,7 @@ jobs:
         run: |
           echo "V=1" >> $GITHUB_ENV
           
-          if [[ "${{ matrix.target }}" = "linux/arm/v6" ]]; then
-            TARGET=arm
-            TARGET_VARIANT=armv6
-          elif [[ "${{ matrix.target }}" = "linux/arm/v7" ]]; then
+          if [[ "${{ matrix.target }}" = "linux/arm/v7" ]]; then
             TARGET=arm
             TARGET_VARIANT=armv7
           elif [ "${{ matrix.target }}" = "linux/arm64" ]; then
@@ -83,7 +79,8 @@ jobs:
           docker run --rm \
             sqlite-builder \
             node node_modules/mocha/bin/mocha --timeout 480000 \
-            test/io_compat.test.js test/musl_legacy_io.test.js
+            test/io_compat.test.js test/musl_legacy_io.test.js \
+            test/datetime_compat.test.js test/value_compat.test.js
 
       - name: Test database I/O with pwritev2 denied by seccomp
         run: |
@@ -91,7 +88,8 @@ jobs:
             --security-opt "seccomp=${{ github.workspace }}/.github/seccomp/deny-pwritev2.json" \
             sqlite-builder \
             node node_modules/mocha/bin/mocha --timeout 480000 \
-            test/io_compat.test.js test/musl_legacy_io.test.js
+            test/io_compat.test.js test/musl_legacy_io.test.js \
+            test/datetime_compat.test.js test/value_compat.test.js
 
       - name: Verify Alpine binary does not import pwrite
         run: |
@@ -109,12 +107,11 @@ jobs:
           retention-days: 7
 
       - uses: actions/setup-node@v6
-        if: matrix.target != 'linux/arm/v7'
         with:
           node-version: 24
 
       - name: Upload binaries to GitHub Release
         run: npm ci --ignore-scripts && node tools/publish-prebuild.js
-        if: matrix.node == 24 && matrix.target != 'linux/arm/v7'
+        if: matrix.node == 24
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}

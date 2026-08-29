@@ -21,6 +21,17 @@ class Database;
 
 class Database : public Napi::ObjectWrap<Database> {
 public:
+    enum DateMode {
+        DATE_RAW,
+        DATE_ISO_MILLISECONDS
+    };
+
+    enum IntegerMode {
+        INTEGER_NUMBER,
+        INTEGER_SAFE,
+        INTEGER_BIGINT
+    };
+
 #if NAPI_VERSION < 6
     static Napi::FunctionReference constructor;
 #endif
@@ -126,6 +137,8 @@ public:
         locked = false;
         pending = 0;
         serialize = false;
+        date_mode = DATE_RAW;
+        integer_mode = INTEGER_NUMBER;
         debug_trace = NULL;
         debug_profile = NULL;
         update_event = NULL;
@@ -201,6 +214,8 @@ protected:
     unsigned int pending;
 
     bool serialize;
+    DateMode date_mode;
+    IntegerMode integer_mode;
 
     std::queue<Call*> queue;
 

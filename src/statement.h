@@ -59,8 +59,11 @@ namespace Values {
     struct Blob : Field {
         template <class T> inline Blob(T _name, size_t len, const void* val) :
                 Field(_name, SQLITE_BLOB), length(len) {
-            value = (char*)malloc(len);
-            memcpy(value, val, len);
+            value = NULL;
+            if (len > 0) {
+                value = (char*)malloc(len);
+                memcpy(value, val, len);
+            }
         }
         inline ~Blob() {
             free(value);
@@ -232,8 +235,8 @@ protected:
     template <class T> T* Bind(const Napi::CallbackInfo& info, int start = 0, int end = -1);
     bool Bind(const Parameters &parameters);
 
-    static void GetRow(Row* row, sqlite3_stmt* stmt);
-    static Napi::Value RowToJS(Napi::Env env, Row* row);
+    static void GetRow(Row* row, Statement* stmt);
+    static Napi::Value RowToJS(Napi::Env env, Row* row, Database* db);
     void Schedule(Work_Callback callback, Baton* baton);
     void Process();
     void CleanQueue();

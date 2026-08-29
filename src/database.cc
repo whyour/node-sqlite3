@@ -371,6 +371,43 @@ Napi::Value Database::Configure(const Napi::CallbackInfo& info) {
         baton->status = info[1].As<Napi::Number>().Int32Value();
         db->Schedule(SetBusyTimeout, baton);
     }
+    else if (info[0].StrictEquals(Napi::String::New(env, "dateMode"))) {
+        if (!info[1].IsString()) {
+            Napi::TypeError::New(env, "dateMode must be raw or iso-milliseconds").ThrowAsJavaScriptException();
+            return env.Null();
+        }
+        std::string mode = info[1].As<Napi::String>().Utf8Value();
+        if (mode == "raw") {
+            db->date_mode = DATE_RAW;
+        }
+        else if (mode == "iso-milliseconds") {
+            db->date_mode = DATE_ISO_MILLISECONDS;
+        }
+        else {
+            Napi::TypeError::New(env, "dateMode must be raw or iso-milliseconds").ThrowAsJavaScriptException();
+            return env.Null();
+        }
+    }
+    else if (info[0].StrictEquals(Napi::String::New(env, "integerMode"))) {
+        if (!info[1].IsString()) {
+            Napi::TypeError::New(env, "integerMode must be number, safe, or bigint").ThrowAsJavaScriptException();
+            return env.Null();
+        }
+        std::string mode = info[1].As<Napi::String>().Utf8Value();
+        if (mode == "number") {
+            db->integer_mode = INTEGER_NUMBER;
+        }
+        else if (mode == "safe") {
+            db->integer_mode = INTEGER_SAFE;
+        }
+        else if (mode == "bigint") {
+            db->integer_mode = INTEGER_BIGINT;
+        }
+        else {
+            Napi::TypeError::New(env, "integerMode must be number, safe, or bigint").ThrowAsJavaScriptException();
+            return env.Null();
+        }
+    }
     else if (info[0].StrictEquals( Napi::String::New(env, "limit"))) {
         REQUIRE_ARGUMENTS(3);
         if (!info[1].IsNumber()) {
@@ -560,12 +597,22 @@ void Database::UpdateCallback(Database *db, UpdateInfo* i) {
     Napi::Env env = db->Env();
     Napi::HandleScope scope(env);
 
+    Napi::Value rowid;
+    if (db->integer_mode == INTEGER_BIGINT ||
+            (db->integer_mode == INTEGER_SAFE &&
+             (info->rowid < -9007199254740991LL || info->rowid > 9007199254740991LL))) {
+        rowid = Napi::BigInt::New(env, static_cast<int64_t>(info->rowid));
+    }
+    else {
+        rowid = Napi::Number::New(env, info->rowid);
+    }
+
     Napi::Value argv[] = {
         Napi::String::New(env, "change"),
         Napi::String::New(env, sqlite_authorizer_string(info->type)),
         Napi::String::New(env, info->database.c_str()),
         Napi::String::New(env, info->table.c_str()),
-        Napi::Number::New(env, info->rowid),
+        rowid,
     };
     EMIT_EVENT(db->Value(), 5, argv);
 }
