@@ -55,9 +55,9 @@ SQLite range. JavaScript `Date` parameters are stored as ISO-8601 text.
 
 Alpine prebuilds define `SQLITE_MUSL_LEGACY_IO=1`. ARMv6 and ARMv7 use
 separate `musl-armv6` and `musl-armv7` release assets. The install script
-selects one using the musl loader name or Node.js ARM version; an unknown
-version builds from source. The bundled SQLite Unix VFS then uses its existing
-`lseek` plus `read`/`write` fallback instead of
+selects one using Node.js's ARM version, falling back to Alpine's architecture
+identifier; an unknown version builds from source. The bundled SQLite Unix VFS
+then uses its existing `lseek` plus `read`/`write` fallback instead of
 musl's `pread`/`pwrite` wrappers. This keeps the module usable when an older
 host seccomp profile rejects `pwritev2` with `EPERM`.
 
