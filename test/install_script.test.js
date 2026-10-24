@@ -30,12 +30,21 @@ describe('package lifecycle scripts', function() {
     });
 
     it('selects distinct musl ARM prebuilds and keeps other platforms unchanged', function() {
-        assert.equal(installer.muslArmVersion(function(file) {
-            return file === '/lib/ld-musl-armhf.so.1';
+        assert.equal(installer.muslArmVersion(6, function() {
+            return 'armv7';
         }), 6);
-        assert.equal(installer.muslArmVersion(function(file) {
-            return file === '/lib/libc.musl-armv7.so.1';
+        assert.equal(installer.muslArmVersion(7, function() {
+            return 'armhf';
         }), 7);
+        assert.equal(installer.muslArmVersion(NaN, function() {
+            return 'armhf';
+        }), 6);
+        assert.equal(installer.muslArmVersion(NaN, function() {
+            return 'armv7';
+        }), 7);
+        assert.ok(Number.isNaN(installer.muslArmVersion(NaN, function() {
+            return 'unknown';
+        })));
         assert.deepEqual(installArgs('linux', 'arm', 'musl', 6), [
             'install', '--fallback-to-build', '--target_libc=musl-armv6'
         ]);

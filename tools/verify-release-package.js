@@ -21,9 +21,9 @@ assert.ok(asset.startsWith('napi-v6-' + process.platform + '-' + process.arch + 
     'asset does not match the runtime platform and architecture: ' + asset);
 
 if (asset.includes('-musl-armv6')) {
-    assert.ok(fs.existsSync('/lib/ld-musl-armhf.so.1'), 'not running on Alpine armhf');
+    assert.strictEqual(fs.readFileSync('/etc/apk/arch', 'utf8').trim(), 'armhf');
 } else if (asset.includes('-musl-armv7')) {
-    assert.ok(fs.existsSync('/lib/ld-musl-armv7.so.1'), 'not running on Alpine armv7');
+    assert.strictEqual(fs.readFileSync('/etc/apk/arch', 'utf8').trim(), 'armv7');
 }
 
 const binary = path.join(packageRoot, 'lib', 'binding',

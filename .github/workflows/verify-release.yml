@@ -11,6 +11,10 @@ on:
         description: Optional single asset to verify
         required: false
         default: ''
+      installer_from_checkout:
+        description: Test the checkout installer against the published package
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -69,6 +73,7 @@ jobs:
           docker run --rm --platform '${{ matrix.platform }}' \
             --env VERSION='${{ inputs.version }}' \
             --env ASSET='${{ matrix.asset }}' \
+            --env INSTALLER_FROM_CHECKOUT='${{ inputs.installer_from_checkout }}' \
             --volume '${{ github.workspace }}:/work:ro' \
             '${{ matrix.image }}' sh -euc '
               if [ -f /etc/alpine-release ]; then
@@ -79,7 +84,13 @@ jobs:
               fi
               mkdir -p /tmp/release-check
               cd /tmp/release-check
-              npm install --no-audit --no-fund --foreground-scripts "@whyour/sqlite3@${VERSION}"
+              if [ "$INSTALLER_FROM_CHECKOUT" = true ]; then
+                npm install --ignore-scripts --no-audit --no-fund "@whyour/sqlite3@${VERSION}"
+                cp /work/tools/install-prebuild.js node_modules/@whyour/sqlite3/tools/install-prebuild.js
+                (cd node_modules/@whyour/sqlite3 && node tools/install-prebuild.js)
+              else
+                npm install --no-audit --no-fund --foreground-scripts "@whyour/sqlite3@${VERSION}"
+              fi
               node /work/tools/verify-release-package.js "$ASSET" "$VERSION"
             '
 

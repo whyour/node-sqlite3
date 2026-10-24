@@ -18,12 +18,21 @@ function installArgs(platform, arch, libc, armVersion) {
     return args;
 }
 
-function muslArmVersion(exists = fs.existsSync) {
-    for (const [version, name] of [[6, 'armhf'], [7, 'armv7']]) {
-        if (exists('/lib/ld-musl-' + name + '.so.1') ||
-            exists('/lib/libc.musl-' + name + '.so.1')) return version;
+function muslArmVersion(nodeArmVersion = process.config.variables.arm_version,
+    readFile = fs.readFileSync) {
+    const version = Number(nodeArmVersion);
+    if (version === 6 || version === 7) return version;
+
+    // Alpine armhf and armv7 both use ld-musl-armhf.so.1. Its name cannot
+    // distinguish the CPU variants when Node's build configuration is absent.
+    try {
+        const alpineArch = String(readFile('/etc/apk/arch', 'utf8')).trim();
+        if (alpineArch === 'armhf') return 6;
+        if (alpineArch === 'armv7') return 7;
+    } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
     }
-    return Number(process.config.variables.arm_version);
+    return NaN;
 }
 
 function install() {
