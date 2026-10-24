@@ -99,11 +99,12 @@ async function smokeTest() {
 }
 
 (async function() {
+    await smokeTest();
+    console.log('SQLite read/write PASS on ' + process.platform + '/' + process.arch);
     const expected = hash(await releaseBinary());
     const actual = hash(fs.readFileSync(binary));
     assert.strictEqual(actual, expected,
         'installed binary differs from the GitHub release asset ' + asset);
-    await smokeTest();
     console.log('PASS ' + asset + ' on ' + process.platform + '/' + process.arch +
         ' (' + process.version + '), sha256=' + actual);
 })().catch(function(error) {
