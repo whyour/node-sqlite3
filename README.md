@@ -6,7 +6,7 @@ Mainly used for my another project - [Qinglong](https://github.com/whyour/qinglo
 
 The following architecture is supported:
 
-1. Alpine (required): linux/amd64, linux/arm/v7,
+1. Alpine (required): linux/amd64, linux/arm/v6, linux/arm/v7,
    linux/arm64, linux/ppc64le, linux/s390x, linux/386
 2. Debian (required): linux/amd64, linux/arm/v7, linux/arm64,
    linux/ppc64le, linux/s390x
@@ -53,12 +53,11 @@ SQLite range. JavaScript `Date` parameters are stored as ISO-8601 text.
 
 ## Alpine legacy-host compatibility
 
-Alpine prebuilds define `SQLITE_MUSL_LEGACY_IO=1`. ARM packages target ARMv7;
-ARMv6 and ARMv7 cannot be distinguished by the generic Node.js `arm` package
-name, so publishing both would silently overwrite one architecture. ARMv6 is
-not supported by the prebuilt package and must explicitly build from source. The
-bundled SQLite Unix
-VFS then uses its existing `lseek` plus `read`/`write` fallback instead of
+Alpine prebuilds define `SQLITE_MUSL_LEGACY_IO=1`. ARMv6 and ARMv7 use
+separate `musl-armv6` and `musl-armv7` release assets. The install script
+selects one using the musl loader name or Node.js ARM version; an unknown
+version builds from source. The bundled SQLite Unix VFS then uses its existing
+`lseek` plus `read`/`write` fallback instead of
 musl's `pread`/`pwrite` wrappers. This keeps the module usable when an older
 host seccomp profile rejects `pwritev2` with `EPERM`.
 

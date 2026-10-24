@@ -1,6 +1,11 @@
 name: alpine
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Upload tested prebuilds to the GitHub release
+        type: boolean
+        default: false
 env:
   FORCE_COLOR: 1
 concurrency:
@@ -21,6 +26,7 @@ jobs:
           - linux/s390x
           - linux/386
           - linux/arm/v7
+          - linux/arm/v6
         variant:
           - alpine
     name: ${{ matrix.variant }} (node=${{ matrix.node }}, target=${{ matrix.target }})
@@ -42,6 +48,9 @@ jobs:
           if [[ "${{ matrix.target }}" = "linux/arm/v7" ]]; then
             TARGET=arm
             TARGET_VARIANT=armv7
+          elif [[ "${{ matrix.target }}" = "linux/arm/v6" ]]; then
+            TARGET=arm
+            TARGET_VARIANT=armv6
           elif [ "${{ matrix.target }}" = "linux/arm64" ]; then
             TARGET=arm64
           elif [ "${{ matrix.target }}" = "linux/amd64" ]; then
@@ -55,6 +64,7 @@ jobs:
           fi
           TARGET_VARIANT=${TARGET_VARIANT:-$TARGET}
           echo "TARGET=$TARGET" >> $GITHUB_ENV
+          echo "TARGET_VARIANT=$TARGET_VARIANT" >> $GITHUB_ENV
           echo "artifact_name=prebuilt-binaries-alpine-$TARGET_VARIANT" >> $GITHUB_OUTPUT
 
           cat $GITHUB_ENV
@@ -69,6 +79,7 @@ jobs:
             --no-cache \
             --build-arg VARIANT=${{ matrix.variant }} \
             --build-arg TARGET=${{ env.TARGET }} \
+            --build-arg TARGET_VARIANT=${{ env.TARGET_VARIANT }} \
             --build-arg NODE_VERSION=${{ matrix.node }} \
             .
           CONTAINER_ID=$(docker create -it sqlite-builder)
@@ -112,6 +123,6 @@ jobs:
 
       - name: Upload binaries to GitHub Release
         run: npm ci --ignore-scripts && node tools/publish-prebuild.js
-        if: matrix.node == 24
+        if: matrix.node == 24 && inputs.publish
         env:
           NODE_PRE_GYP_GITHUB_TOKEN: ${{ secrets.API_TOKEN }}

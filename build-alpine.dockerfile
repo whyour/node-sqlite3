@@ -15,6 +15,10 @@ RUN apk add --no-cache make g++ nodejs npm && \
 RUN npm ci --ignore-scripts
 RUN node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp install --build-from-source
 RUN npm run test
-RUN node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp package
+RUN case "$(apk --print-arch)" in \
+      armhf) node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp package --target_libc=musl-armv6 ;; \
+      armv7) node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp package --target_libc=musl-armv7 ;; \
+      *) node node_modules/@mapbox/node-pre-gyp/bin/node-pre-gyp package ;; \
+    esac
 
 CMD ["sh"]
