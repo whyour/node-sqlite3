@@ -43,7 +43,7 @@ async function releaseBinary() {
     const tar = require(require.resolve('tar', { paths: [packageRoot] }));
     return new Promise(function(resolve, reject) {
         const binaries = [];
-        const parser = new tar.Parse();
+        const parser = new tar.Parser();
         parser.on('entry', function(entry) {
             if (!entry.path.endsWith('/node_sqlite3.node')) {
                 entry.resume();

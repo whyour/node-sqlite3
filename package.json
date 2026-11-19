@@ -1,7 +1,7 @@
 {
   "name": "@whyour/sqlite3",
   "description": "Asynchronous, non-blocking SQLite3 bindings",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "homepage": "https://github.com/whyour/node-sqlite3",
   "author": {
     "name": "Mapbox",
@@ -48,10 +48,13 @@
     "url": "https://github.com/whyour/node-sqlite3.git"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.0",
+    "@mapbox/node-pre-gyp": "^2.0.3",
     "detect-libc": "^1.0.3",
     "node-addon-api": "^4.2.0",
-    "tar": "^6.1.11"
+    "tar": "^7.5.23"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "devDependencies": {
     "eslint": "6.8.0",

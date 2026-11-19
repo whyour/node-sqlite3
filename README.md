@@ -68,6 +68,9 @@ system library. External SQLite builds are unchanged.
 
 ## Prebuild toolchains
 
+Node.js 18 or newer is required by the package's installation and loading
+dependencies (`tar` 7 and `@mapbox/node-pre-gyp` 2).
+
 Published binaries keep the `napi-v6` ABI; the Node.js version used to compile
 them does not become a runtime requirement. Release CI uses Node.js 24 where an
 official image exists and Node.js 22 with node-gyp 12 for glibc ARMv7. Alpine
